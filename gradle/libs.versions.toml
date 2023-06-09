@@ -10,7 +10,7 @@ interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.2.1"
 mockk = "io.mockk:mockk:1.13.5"
 ronin-kafka = "com.projectronin:ronin-kafka:1.0.0"
 spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.5"
-testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.1"
+testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.3"
 
 [bundles]
 interop-kafka-events = [
