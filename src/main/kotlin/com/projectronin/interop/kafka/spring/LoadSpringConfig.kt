@@ -28,7 +28,8 @@ class LoadSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             ResourceType.MedicationStatement,
             ResourceType.Observation,
             ResourceType.Organization,
-            ResourceType.PractitionerRole
+            ResourceType.PractitionerRole,
+            ResourceType.RequestGroup
         )
         return supportedResources.map {
             generateTopics(it)
