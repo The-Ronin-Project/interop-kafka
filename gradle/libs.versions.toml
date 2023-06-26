@@ -5,7 +5,7 @@ event-interop-resource-request = "com.projectronin.contract.event:event-interop-
 interop-common = "com.projectronin.interop:interop-common:3.9.1"
 interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.9.1"
 
-interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.2.1"
+interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.4.0"
 
 mockk = "io.mockk:mockk:1.13.5"
 ronin-kafka = "com.projectronin:ronin-kafka:1.0.0"
