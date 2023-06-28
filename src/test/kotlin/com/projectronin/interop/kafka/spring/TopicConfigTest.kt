@@ -36,7 +36,8 @@ class TopicConfigTest {
             "Observation",
             "Organization",
             "PractitionerRole",
-            "RequestGroup"
+            "RequestGroup",
+            "CarePlan"
         )
         val numberOfResources = supportedResources.size
         assertEquals(numberOfResources, LoadSpringConfig(mockProperties).loadTopics().size)
