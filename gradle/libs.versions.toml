@@ -1,19 +1,39 @@
+[versions]
+interop-event-resource = "1.0.0"
+interop-common = "3.9.1"
+interop-fhir = "8.4.0"
+
+interop-gradle = "3.2.0"
+
+mockk = "1.13.5"
+ronin-kafka = "1.0.0"
+# @pin until can move to JDK 17
+spring-boot = "2.7.13"
+testcontainers-bom = "1.18.3"
+
 [libraries]
-event-interop-resource-internal = "com.projectronin.contract.event:event-interop-resource-internal:1.0.0"
-event-interop-resource-request = "com.projectronin.contract.event:event-interop-resource-request:1.0.0"
+event-interop-resource-internal = { module = "com.projectronin.contract.event:event-interop-resource-internal", version.ref = "interop-event-resource" }
+event-interop-resource-request = { module = "com.projectronin.contract.event:event-interop-resource-request", version.ref = "interop-event-resource" }
 
-interop-common = "com.projectronin.interop:interop-common:3.9.1"
-interop-commonJackson = "com.projectronin.interop:interop-common-jackson:3.9.1"
+interop-common = { module = "com.projectronin.interop:interop-common", version.ref = "interop-common" }
+interop-commonJackson = { module = "com.projectronin.interop:interop-common-jackson", version.ref = "interop-common" }
 
-interop-fhir = "com.projectronin.interop.fhir:interop-fhir:8.4.0"
+interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }
 
-mockk = "io.mockk:mockk:1.13.5"
-ronin-kafka = "com.projectronin:ronin-kafka:1.0.0"
-spring-boot-parent = "org.springframework.boot:spring-boot-parent:2.7.5"
-testcontainers-bom = "org.testcontainers:testcontainers-bom:1.18.3"
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+ronin-kafka = { module = "com.projectronin:ronin-kafka", version.ref = "ronin-kafka" }
+spring-boot-parent = { module = "org.springframework.boot:spring-boot-parent", version.ref = "spring-boot" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers-bom" }
 
 [bundles]
 interop-kafka-events = [
     "event-interop-resource-internal",
     "event-interop-resource-request"
 ]
+
+[plugins]
+interop-gradle-integration = { id = "com.projectronin.interop.gradle.integration", version.ref = "interop-gradle" }
+interop-gradle-junit = { id = "com.projectronin.interop.gradle.junit", version.ref = "interop-gradle" }
+interop-gradle-publish = { id = "com.projectronin.interop.gradle.publish", version.ref = "interop-gradle" }
+interop-gradle-spring = { id = "com.projectronin.interop.gradle.spring", version.ref = "interop-gradle" }
+interop-version-catalog = { id = "com.projectronin.interop.gradle.version-catalog-update", version.ref = "interop-gradle" }
