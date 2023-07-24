@@ -32,7 +32,8 @@ class KafkaLoadService(private val kafkaClient: KafkaClient, topics: List<LoadTo
         trigger: DataTrigger,
         resourceFHIRIds: List<String>,
         resourceType: ResourceType,
-        metadata: Metadata
+        metadata: Metadata,
+        flowOptions: InteropResourceLoadV1.FlowOptions? = null
     ): PushResponse<String> {
         val loadTopic = getTopic(resourceType)
         if (loadTopic == null) {
@@ -60,7 +61,8 @@ class KafkaLoadService(private val kafkaClient: KafkaClient, topics: List<LoadTo
                             DataTrigger.AD_HOC -> InteropResourceLoadV1.DataTrigger.adhoc
                             DataTrigger.NIGHTLY -> InteropResourceLoadV1.DataTrigger.nightly
                         },
-                        metadata = metadata
+                        metadata = metadata,
+                        flowOptions = flowOptions
                     )
                 )
             }

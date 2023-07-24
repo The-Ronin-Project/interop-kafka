@@ -14,6 +14,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.time.OffsetDateTime
 
 class KafkaRequestServiceTest {
     private val topic = mockk<RequestTopic> {
@@ -46,6 +47,38 @@ class KafkaRequestServiceTest {
                 listOf("1234"),
                 ResourceType.Patient,
                 "testing-service"
+            )
+        }
+    }
+
+    @Test
+    fun `push single event with flow options success`() {
+        val flowOptions = InteropResourceRequestV1.FlowOptions(
+            disableDownstreamResources = true,
+            normalizationRegistryMinimumTime = OffsetDateTime.now()
+        )
+        val requestData = InteropResourceRequestV1(
+            tenantId = tenantId,
+            resourceFHIRId = "1234",
+            resourceType = "PATIENT",
+            requestingService = "testing-service",
+            flowOptions = flowOptions
+        )
+        val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
+        every {
+            kafkaClient.publishEvents(
+                topic,
+                listOf(event)
+            )
+        } returns PushResponse(successful = listOf(event))
+
+        assertDoesNotThrow {
+            service.pushRequestEvent(
+                tenantId,
+                listOf("1234"),
+                ResourceType.Patient,
+                "testing-service",
+                flowOptions
             )
         }
     }
@@ -122,11 +155,26 @@ class KafkaRequestServiceTest {
             resourceType = "PATIENT",
             requestingService = "test-service"
         )
+        val requestData2 = InteropResourceRequestV1(
+            tenantId = tenantId,
+            resourceFHIRId = "1234",
+            resourceType = "PATIENT",
+            requestingService = "test-service",
+            flowOptions = InteropResourceRequestV1.FlowOptions(
+                disableDownstreamResources = true,
+                normalizationRegistryMinimumTime = OffsetDateTime.now()
+            )
+        )
         every {
             kafkaClient.retrieveEvents(any(), any())
-        } returns listOf(mockk { every { data } returns requestData })
+        } returns listOf(
+            mockk { every { data } returns requestData },
+            mockk { every { data } returns requestData2 }
+        )
         val ret = service.retrieveRequestEvents()
-        assertEquals(requestData, ret.first())
+        assertEquals(2, ret.size)
+        assertEquals(requestData, ret[0])
+        assertEquals(requestData2, ret[1])
     }
 
     @Test

@@ -1,6 +1,7 @@
 [versions]
 interop-common = "3.9.1"
-interop-event-resource = "1.0.0"
+interop-event-resource-internal = "1.1.0"
+interop-event-resource-request = "1.1.0"
 interop-fhir = "8.7.1"
 interop-gradle = "3.2.0"
 mockk = "1.13.5"
@@ -10,8 +11,8 @@ spring-boot = "2.7.13"
 testcontainers-bom = "1.18.3"
 
 [libraries]
-event-interop-resource-internal = { module = "com.projectronin.contract.event:event-interop-resource-internal", version.ref = "interop-event-resource" }
-event-interop-resource-request = { module = "com.projectronin.contract.event:event-interop-resource-request", version.ref = "interop-event-resource" }
+event-interop-resource-internal = { module = "com.projectronin.contract.event:event-interop-resource-internal", version.ref = "interop-event-resource-internal" }
+event-interop-resource-request = { module = "com.projectronin.contract.event:event-interop-resource-request", version.ref = "interop-event-resource-request" }
 interop-common = { module = "com.projectronin.interop:interop-common", version.ref = "interop-common" }
 interop-commonJackson = { module = "com.projectronin.interop:interop-common-jackson", version.ref = "interop-common" }
 interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }

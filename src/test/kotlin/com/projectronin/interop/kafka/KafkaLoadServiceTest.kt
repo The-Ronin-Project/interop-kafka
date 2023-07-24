@@ -72,6 +72,41 @@ class KafkaLoadServiceTest {
     }
 
     @Test
+    fun `publishing single resource with flow options is successful`() {
+        val flowOptions = InteropResourceLoadV1.FlowOptions(
+            disableDownstreamResources = true,
+            normalizationRegistryMinimumTime = OffsetDateTime.now()
+        )
+        val loadData = InteropResourceLoadV1(
+            tenantId = tenantId,
+            resourceFHIRId = "1234",
+            resourceType = ResourceType.Patient,
+            dataTrigger = InteropResourceLoadV1.DataTrigger.nightly,
+            metadata = metadata,
+            flowOptions = flowOptions
+        )
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.LOAD, "1234", data = loadData)
+        every {
+            kafkaClient.publishEvents(
+                patientTopic,
+                listOf(patientEvent)
+            )
+        } returns PushResponse(successful = listOf(patientEvent))
+
+        assertEquals(
+            1,
+            service.pushLoadEvent(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf("1234"),
+                ResourceType.Patient,
+                metadata,
+                flowOptions
+            ).successful.size
+        )
+    }
+
+    @Test
     fun `delete topic test`() {
         every { kafkaClient.deleteTopics(any()) } just Runs
         assertDoesNotThrow { service.deleteAllLoadTopics() }
@@ -158,9 +193,25 @@ class KafkaLoadServiceTest {
             dataTrigger = InteropResourceLoadV1.DataTrigger.nightly,
             metadata = metadata
         )
-        every { kafkaClient.retrieveEvents(any(), any()) } returns listOf(mockk { every { data } returns loadData })
+
+        val flowOptions = InteropResourceLoadV1.FlowOptions(
+            disableDownstreamResources = true
+        )
+        val loadData2 = InteropResourceLoadV1(
+            tenantId = tenantId,
+            resourceFHIRId = "1234",
+            resourceType = ResourceType.Patient,
+            dataTrigger = InteropResourceLoadV1.DataTrigger.nightly,
+            metadata = metadata,
+            flowOptions = flowOptions
+        )
+        every { kafkaClient.retrieveEvents(any(), any()) } returns listOf(
+            mockk { every { data } returns loadData },
+            mockk { every { data } returns loadData2 }
+        )
         val ret = service.retrieveLoadEvents(ResourceType.Patient)
-        assertEquals(loadData, ret.first())
+        assertEquals(loadData, ret[0])
+        assertEquals(loadData2, ret[1])
     }
 
     @Test

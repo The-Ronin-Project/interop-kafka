@@ -19,7 +19,8 @@ class KafkaRequestService(private val kafkaClient: KafkaClient, private val topi
         tenantId: String,
         resourceFHIRIds: List<String>,
         resourceType: ResourceType,
-        requestingService: String
+        requestingService: String,
+        flowOptions: InteropResourceRequestV1.FlowOptions? = null
     ): PushResponse<String> {
         val events = resourceFHIRIds.map {
             KafkaEvent(
@@ -31,7 +32,8 @@ class KafkaRequestService(private val kafkaClient: KafkaClient, private val topi
                     tenantId = tenantId,
                     resourceFHIRId = it,
                     resourceType = resourceType.name,
-                    requestingService = requestingService
+                    requestingService = requestingService,
+                    flowOptions = flowOptions
                 )
             )
         }
