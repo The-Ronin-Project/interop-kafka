@@ -1,5 +1,5 @@
 [versions]
-interop-common = "3.9.1"
+interop-common = "3.10.0"
 interop-event-resource-internal = "1.1.0"
 interop-event-resource-request = "1.1.0"
 interop-fhir = "8.7.1"
