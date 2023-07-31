@@ -36,8 +36,7 @@ class TopicConfigTest {
             "Observation",
             "Organization",
             "PractitionerRole",
-            "RequestGroup",
-            "CarePlan"
+            "RequestGroup"
         )
         val numberOfResources = supportedResources.size
         assertEquals(numberOfResources, LoadSpringConfig(mockProperties).loadTopics().size)
@@ -61,5 +60,19 @@ class TopicConfigTest {
         val expectedRequestTopicName = "bmrf-cloud.black-mesa-1.interop-mirth.resource-request.v1"
         assertEquals(expectedRequestTopicName, requestTopic.topicName)
         assertEquals("anti-mass-spec-service", requestTopic.systemName)
+    }
+
+    @Test
+    fun `no duplicate resources`() {
+        val loadTopicsByResource = LoadSpringConfig(mockProperties).loadTopics().groupBy { it.resourceType }
+        loadTopicsByResource.forEach { (resourceType, topics) ->
+            assertEquals(1, topics.size, "Found more load topics for $resourceType")
+        }
+
+        val publishTopicsByResource =
+            PublishSpringConfig(mockProperties).publishTopics().groupBy { Pair(it.resourceType, it.dataTrigger) }
+        publishTopicsByResource.forEach { (key, topics) ->
+            assertEquals(1, topics.size, "Found more publish topics for ${key.first} - ${key.second}")
+        }
     }
 }
