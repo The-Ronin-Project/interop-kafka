@@ -2,7 +2,7 @@
 interop-common = "3.10.0"
 interop-event-resource-internal = "1.1.0"
 interop-event-resource-request = "1.1.0"
-interop-fhir = "8.7.1"
+interop-fhir = "8.7.3"
 interop-gradle = "3.2.0"
 mockk = "1.13.5"
 ronin-kafka = "1.0.0"
