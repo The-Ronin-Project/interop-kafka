@@ -7,4 +7,6 @@ data class RequestTopic(
     override val systemName: String,
     override val topicName: String,
     override val dataSchema: String
-) : KafkaTopic
+) : KafkaTopic {
+    override val useLatestOffset = false
+}

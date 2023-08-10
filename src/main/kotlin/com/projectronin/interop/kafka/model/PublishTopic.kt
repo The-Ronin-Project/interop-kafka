@@ -14,4 +14,6 @@ data class PublishTopic(
     val resourceType: ResourceType,
     val dataTrigger: DataTrigger,
     val converter: (String, Resource<*>, Metadata) -> Any
-) : KafkaTopic
+) : KafkaTopic {
+    override val useLatestOffset = true
+}

@@ -67,8 +67,38 @@ class ProducerUtilsTest {
         val topic = mockk<KafkaTopic> {
             every { dataSchema } returns "test.topic.name.schema"
             every { topicName } returns "topicname"
+            every { useLatestOffset } returns false
         }
         val consumer = createConsumer(topic, mapOf(), kafkaConfig)
         Assertions.assertNotNull(consumer)
+    }
+
+    @Test
+    fun `createConsumer works with useLatest`() {
+        val kafkaConfig = KafkaConfig(
+            cloud = KafkaCloudConfig(
+                vendor = "local",
+                region = "local"
+            ),
+            bootstrap = KafkaBootstrapConfig(servers = "localhost:9092"),
+            publish = KafkaPublishConfig(source = "interop-kafka-it"),
+            properties = KafkaPropertiesConfig(
+                security = KafkaSecurityConfig(protocol = "PLAINTEXT"),
+                sasl = KafkaSaslConfig(
+                    mechanism = "GSSAPI",
+                    jaas = KafkaSaslJaasConfig(config = "")
+                )
+            ),
+            retrieve = KafkaRetrieveConfig(groupId = "interop-kafka-it")
+        )
+
+        val topic = mockk<KafkaTopic> {
+            every { dataSchema } returns "test.topic.name.schema"
+            every { topicName } returns "topicname"
+            every { useLatestOffset } returns true
+        }
+        val consumer = createConsumer(topic, mapOf(), kafkaConfig)
+        Assertions.assertNotNull(consumer)
+        Assertions.assertEquals(consumer.kafkaProperties.properties.getProperty("auto.offset.reset"), "latest")
     }
 }

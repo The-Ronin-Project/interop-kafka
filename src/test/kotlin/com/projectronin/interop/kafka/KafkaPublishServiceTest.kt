@@ -452,6 +452,27 @@ class KafkaPublishServiceTest {
     }
 
     @Test
+    fun `retrieve events works for just clear`() {
+        val publishEvent = InteropResourcePublishV1(
+            tenantId = tenantId,
+            resourceType = ResourceType.Patient,
+            dataTrigger = InteropResourcePublishV1.DataTrigger.nightly,
+            resourceJson = "json",
+            metadata = metadata
+        )
+        every {
+            kafkaClient.retrieveEvents(
+                topic = any(),
+                typeMap = any(),
+                duration = any(),
+                groupId = "123"
+            )
+        } returns listOf(mockk { every { data } returns publishEvent })
+        val ret = service.retrievePublishEvents(ResourceType.Patient, DataTrigger.NIGHTLY, "123", true)
+        assertEquals(0, ret.size)
+    }
+
+    @Test
     fun `retrieve events empty`() {
         val publishEvent = InteropResourcePublishV1(
             tenantId = tenantId,

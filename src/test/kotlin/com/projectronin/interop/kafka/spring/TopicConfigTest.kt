@@ -3,6 +3,8 @@ package com.projectronin.interop.kafka.spring
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TopicConfigTest {
@@ -52,14 +54,17 @@ class TopicConfigTest {
         val expectedLoadTopicName = "bmrf-cloud.black-mesa-1.interop-mirth.patient-load.v1"
         assertEquals(expectedLoadTopicName, loadTopic.topicName)
         assertEquals("anti-mass-spec-service", loadTopic.systemName)
+        assertFalse(loadTopic.useLatestOffset)
 
         val expectedPublishTopicName = "bmrf-cloud.black-mesa-1.interop-mirth.patient-publish-nightly.v1"
         assertEquals(expectedPublishTopicName, publishTopic.topicName)
         assertEquals("anti-mass-spec-service", publishTopic.systemName)
+        assertTrue(publishTopic.useLatestOffset)
 
         val expectedRequestTopicName = "bmrf-cloud.black-mesa-1.interop-mirth.resource-request.v1"
         assertEquals(expectedRequestTopicName, requestTopic.topicName)
         assertEquals("anti-mass-spec-service", requestTopic.systemName)
+        assertFalse(requestTopic.useLatestOffset)
     }
 
     @Test

@@ -27,7 +27,6 @@ import java.util.UUID
 
 class KafkaPublishServiceIT : BaseKafkaIT() {
     private val topics = PublishSpringConfig(kafkaConfig).publishTopics()
-
     private val kafkaClient = KafkaClient(kafkaConfig, kafkaAdmin)
     private val publishService = KafkaPublishService(kafkaClient, topics)
 
@@ -76,6 +75,12 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
             birthDate = Date("1975-07-05")
         )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
+
+        // because we start retrieving events from the latest we need to register the consumer,
+        // that requires the topic is created, which is easiest-ly done by publishing a resource
+        // so hence these two throw away lines to just get the consumer in a state where it'll receive a message
+        publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
+        publishService.retrievePublishEvents(ResourceType.Patient, DataTrigger.AD_HOC)
 
         val response = publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
         assertEquals(1, response.successful.size)
@@ -128,7 +133,6 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
             birthDate = Date("1975-07-05")
         )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
-
         val response = publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
         assertEquals(1, response.successful.size)
         assertEquals(patient, response.successful[0])
@@ -164,7 +168,6 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
             birthDate = Date("1975-07-05")
         )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
-
         val response =
             publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient1, patient2), metadata)
         assertEquals(2, response.successful.size)
@@ -200,7 +203,6 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
             status = Code("fulfilled")
         )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
-
         val response =
             publishService.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient1, appointment1), metadata)
         assertEquals(2, response.successful.size)

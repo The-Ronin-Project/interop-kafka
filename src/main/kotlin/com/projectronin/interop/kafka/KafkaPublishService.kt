@@ -95,11 +95,20 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
         val typeMap =
             mapOf("ronin.interop-mirth.${resourceType.eventName()}.publish" to InteropResourcePublishV1::class)
         if (justClear) {
-            // shorter wait time because you are assuming events are there or not, no waiting
-            kafkaClient.retrieveEvents(topic, typeMap, groupId, Duration.ofMillis(500))
+            kafkaClient.retrieveEvents(
+                topic = topic,
+                typeMap = typeMap,
+                groupId = groupId,
+                // shorter wait time because you are assuming events are there or not, no waiting
+                duration = Duration.ofMillis(500)
+            )
             return emptyList()
         }
-        val events = kafkaClient.retrieveEvents(topic, typeMap, groupId)
+        val events = kafkaClient.retrieveEvents(
+            topic = topic,
+            typeMap = typeMap,
+            groupId = groupId
+        )
         return events.map {
             it.data as InteropResourcePublishV1
         }
