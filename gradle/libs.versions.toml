@@ -4,7 +4,8 @@ interop-event-resource-internal = "1.1.0"
 interop-event-resource-request = "1.1.0"
 interop-fhir = "8.8.1"
 interop-gradle = "3.2.0"
-mockk = "1.13.5"
+kotlinx-coroutines = "1.7.3"
+mockk = "1.13.7"
 ronin-kafka = "1.0.0"
 # @pin until can move to JDK 17
 spring-boot = "2.7.13"
@@ -16,6 +17,7 @@ event-interop-resource-request = { module = "com.projectronin.contract.event:eve
 interop-common = { module = "com.projectronin.interop:interop-common", version.ref = "interop-common" }
 interop-commonJackson = { module = "com.projectronin.interop:interop-common-jackson", version.ref = "interop-common" }
 interop-fhir = { module = "com.projectronin.interop.fhir:interop-fhir", version.ref = "interop-fhir" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 ronin-kafka = { module = "com.projectronin:ronin-kafka", version.ref = "ronin-kafka" }
 spring-boot-parent = { module = "org.springframework.boot:spring-boot-parent", version.ref = "spring-boot" }

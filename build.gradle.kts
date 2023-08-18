@@ -29,5 +29,6 @@ dependencies {
     itImplementation(libs.ronin.kafka)
     itImplementation(libs.interop.fhir)
     itImplementation(libs.bundles.interop.kafka.events)
+    itImplementation(libs.kotlinx.coroutines.core)
     itImplementation("io.github.microutils:kotlin-logging:3.0.5")
 }

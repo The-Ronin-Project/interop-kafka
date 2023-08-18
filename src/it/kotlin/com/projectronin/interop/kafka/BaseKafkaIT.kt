@@ -1,7 +1,5 @@
 package com.projectronin.interop.kafka
 
-import com.projectronin.interop.kafka.model.DataTrigger
-import com.projectronin.interop.kafka.model.PublishTopic
 import com.projectronin.interop.kafka.spring.AdminWrapper
 import com.projectronin.interop.kafka.spring.KafkaBootstrapConfig
 import com.projectronin.interop.kafka.spring.KafkaCloudConfig
@@ -12,16 +10,11 @@ import com.projectronin.interop.kafka.spring.KafkaRetrieveConfig
 import com.projectronin.interop.kafka.spring.KafkaSaslConfig
 import com.projectronin.interop.kafka.spring.KafkaSaslJaasConfig
 import com.projectronin.interop.kafka.spring.KafkaSecurityConfig
-import com.projectronin.kafka.RoninConsumer
-import com.projectronin.kafka.config.RoninConsumerKafkaProperties
-import com.projectronin.kafka.data.RoninEvent
-import com.projectronin.kafka.data.RoninEventResult
+import mu.KotlinLogging
+import org.apache.kafka.common.ConsumerGroupState
 import org.testcontainers.containers.DockerComposeContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import java.io.File
-import java.util.Timer
-import kotlin.concurrent.schedule
-import kotlin.reflect.KClass
 
 abstract class BaseKafkaIT {
     companion object {
@@ -30,14 +23,14 @@ abstract class BaseKafkaIT {
                 "kafka",
                 Wait.forLogMessage(".*\\[KafkaServer id=\\d+\\] started.*", 1)
             ).start()
-
-        private val consumersByTopic = mutableMapOf<String, RoninConsumer>()
     }
+
+    private val logger = KotlinLogging.logger { }
 
     protected val tenantId = "test"
     private val cloudConfig = KafkaCloudConfig(
-        vendor = "local",
-        region = "local"
+        vendor = "oci",
+        region = "us-phoenix-1"
     )
 
     protected val kafkaConfig = KafkaConfig(
@@ -56,41 +49,25 @@ abstract class BaseKafkaIT {
 
     protected val kafkaAdmin = AdminWrapper(kafkaConfig)
 
-    protected fun pollEvents(
-        topic: PublishTopic,
-        trigger: DataTrigger?,
-        typeMap: Map<String, KClass<*>>,
-        waitTime: Long = 1000,
-        expectedResults: Int? = null
-    ): List<RoninEvent<*>> {
-        val consumer = createConsumer(topic, trigger, typeMap)
-        val events = mutableListOf<RoninEvent<*>>()
-
-        Timer("poll").schedule(waitTime) {
-            consumer.stop()
-        }
-
-        consumer.process {
-            events.add(it)
-
-            if (expectedResults != null && events.size >= expectedResults) {
-                consumer.stop()
+    protected fun waitOnTopic(topic: String) {
+        // Wait for the topic to be registered and the consumer group to be stable
+        while (true) {
+            val names = kafkaAdmin.client.listTopics().names().get()
+            if (names.any { it == topic }) {
+                val groups = kafkaAdmin.client.listConsumerGroups().valid().get()
+                if (groups.any {
+                    it.groupId() == "groupID" && it.state().get() == ConsumerGroupState.STABLE
+                }
+                ) {
+                    logger.warn { "Topic and consumer group created" }
+                    break
+                } else {
+                    logger.warn { "Topic found, but consumer group not found or not stable" }
+                }
+            } else {
+                logger.warn { "Topic not yet found" }
             }
-
-            RoninEventResult.ACK
+            Thread.sleep(100)
         }
-        return events
     }
-
-    private fun createConsumer(topic: PublishTopic, trigger: DataTrigger?, typeMap: Map<String, KClass<*>>) =
-        consumersByTopic.computeIfAbsent(topic.topicName) {
-            RoninConsumer(
-                topics = listOf(it),
-                typeMap = typeMap,
-                kafkaProperties = RoninConsumerKafkaProperties(
-                    "bootstrap.servers" to kafkaConfig.bootstrap.servers,
-                    "group.id" to "interop-kafka-it-$it"
-                )
-            )
-        }
 }

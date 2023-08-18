@@ -81,6 +81,7 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
         // so hence these two throw away lines to just get the consumer in a state where it'll receive a message
         publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
         publishService.retrievePublishEvents(ResourceType.Patient, DataTrigger.AD_HOC)
+        waitOnTopic("oci.us-phoenix-1.interop-mirth.patient-publish-adhoc.v1")
 
         val response = publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
         assertEquals(1, response.successful.size)
