@@ -54,15 +54,21 @@ abstract class BaseKafkaIT {
         while (true) {
             val names = kafkaAdmin.client.listTopics().names().get()
             if (names.any { it == topic }) {
-                val groups = kafkaAdmin.client.listConsumerGroups().valid().get()
-                if (groups.any {
-                    it.groupId() == "groupID" && it.state().get() == ConsumerGroupState.STABLE
-                }
-                ) {
-                    logger.warn { "Topic and consumer group created" }
-                    break
+                val group = kafkaAdmin.client.listConsumerGroups().valid().get().find { it.groupId() == "groupID" }
+                if (group != null) {
+                    // Only attempt 1200 times, or 2 minutes
+                    repeat(1200) {
+                        val state = group.state().get()
+                        if (state == ConsumerGroupState.STABLE) {
+                            logger.warn { "Topic and consumer group created" }
+                            return
+                        }
+
+                        logger.warn { "Consumer group state: $state" }
+                        Thread.sleep(100)
+                    }
                 } else {
-                    logger.warn { "Topic found, but consumer group not found or not stable" }
+                    logger.warn { "Topic found, but consumer group not found" }
                 }
             } else {
                 logger.warn { "Topic not yet found" }
