@@ -51,7 +51,8 @@ abstract class BaseKafkaIT {
 
     protected fun waitOnTopic(topic: String) {
         // Wait for the topic to be registered and the consumer group to be stable
-        while (true) {
+        var count = 0
+        while (count < 100) {
             val names = kafkaAdmin.client.listTopics().names().get()
             if (names.any { it == topic }) {
                 val group = kafkaAdmin.client.listConsumerGroups().valid().get().find { it.groupId() == "groupID" }
@@ -74,6 +75,7 @@ abstract class BaseKafkaIT {
                 logger.warn { "Topic not yet found" }
             }
             Thread.sleep(100)
+            count += 1
         }
     }
 }
