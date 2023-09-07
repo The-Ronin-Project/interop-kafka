@@ -24,13 +24,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Gradlew Test
-        run: ./gradlew test
+        run: ./gradlew :interop-kafka:test
       - name: Upload Code Coverage
         uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
-          file: ./codecov/test/jacocoTestReport.xml
+          file: ./interop-kafka/codecov/test/jacocoTestReport.xml
 
       - name: Upload report to DataDog
         if: always() && !cancelled()
@@ -38,4 +38,4 @@ jobs:
           DD_ENV: ci
           DATADOG_SITE: datadoghq.com
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-        run: datadog-ci junit upload --service interop-kafka ./build/test-results/test
+        run: datadog-ci junit upload --service interop-kafka ./interop-kafka/build/test-results/test

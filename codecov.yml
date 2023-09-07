@@ -4,16 +4,25 @@ codecov:
 coverage:
   status:
     project:
-      default:
+      kafka:
         target: auto
         threshold: 1%
+        flags:
+          - kafka
 
     patch:
-      default:
+      kafka:
         target: 80
         threshold: 1%
         base: auto
+        flags:
+          - kafka
 
+flags:
+  kafka:
+    paths:
+      - interop-kafka/
+    carryforward: true
 comment:
   layout: "reach, diff, flags, files"
   behavior: default

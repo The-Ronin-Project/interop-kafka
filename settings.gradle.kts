@@ -1,5 +1,12 @@
 rootProject.name = "interop-kafka"
 
+include("interop-kafka")
+include("interop-kafka-testing-client")
+
+for (project in rootProject.children) {
+    project.buildFileName = "${project.name}.gradle.kts"
+}
+
 pluginManagement {
     repositories {
         maven {
