@@ -6,7 +6,7 @@ interop-fhir = "8.9.1"
 interop-gradle = "3.2.0"
 kotlinx-coroutines = "1.7.3"
 mockk = "1.13.7"
-ronin-kafka = "1.0.0"
+ronin-kafka = "1.1.0"
 # @pin until can move to JDK 17
 spring-boot = "2.7.13"
 testcontainers-bom = "1.19.0"
