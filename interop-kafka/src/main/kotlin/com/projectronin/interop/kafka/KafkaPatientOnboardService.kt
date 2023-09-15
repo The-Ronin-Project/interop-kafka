@@ -34,7 +34,7 @@ class KafkaPatientOnboardService(private val kafkaClient: KafkaClient) {
 data class PatientOnboardingStatus(
     val patientId: String,
     val tenantId: String,
-    val onboardAction: OnboardAction,
+    val action: OnboardAction,
     val actionTimestamp: String
 ) {
     enum class OnboardAction {
