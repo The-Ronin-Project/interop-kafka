@@ -24,6 +24,7 @@ class LoadSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             ResourceType.DocumentReference,
             ResourceType.Location,
             ResourceType.Medication,
+            ResourceType.MedicationAdministration,
             ResourceType.MedicationRequest,
             ResourceType.MedicationStatement,
             ResourceType.Observation,

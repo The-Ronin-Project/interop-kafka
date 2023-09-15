@@ -33,6 +33,7 @@ class TopicConfigTest {
             "Encounter",
             "Location",
             "Medication",
+            "MedicationAdministration",
             "MedicationRequest",
             "MedicationStatement",
             "Observation",

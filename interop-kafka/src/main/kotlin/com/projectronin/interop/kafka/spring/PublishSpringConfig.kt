@@ -27,6 +27,7 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             ResourceType.Encounter,
             ResourceType.Location,
             ResourceType.Medication,
+            ResourceType.MedicationAdministration,
             ResourceType.MedicationRequest,
             ResourceType.MedicationStatement,
             ResourceType.Observation,
