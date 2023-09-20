@@ -33,6 +33,7 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             ResourceType.Observation,
             ResourceType.Organization,
             ResourceType.PractitionerRole,
+            ResourceType.Procedure,
             ResourceType.RequestGroup
         )
         return supportedResources.map {

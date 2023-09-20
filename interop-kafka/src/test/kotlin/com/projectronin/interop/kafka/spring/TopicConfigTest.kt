@@ -39,6 +39,7 @@ class TopicConfigTest {
             "Observation",
             "Organization",
             "PractitionerRole",
+            "Procedure",
             "RequestGroup"
         )
         val numberOfResources = supportedResources.size
