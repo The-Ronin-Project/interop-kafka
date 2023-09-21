@@ -39,6 +39,7 @@ class TopicConfigTest {
             "Observation",
             "Organization",
             "PractitionerRole",
+            "ServiceRequest",
             "Procedure",
             "RequestGroup"
         )
