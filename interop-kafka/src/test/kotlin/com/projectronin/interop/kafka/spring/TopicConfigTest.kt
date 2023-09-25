@@ -66,7 +66,7 @@ class TopicConfigTest {
 
         val expectedRequestTopicName = "bmrf-cloud.black-mesa-1.interop-mirth.resource-request.v1"
         assertEquals(expectedRequestTopicName, requestTopic.topicName)
-        assertEquals("anti-mass-spec-service", requestTopic.systemName)
+        assertEquals("interop-mirth", requestTopic.systemName)
         assertFalse(requestTopic.useLatestOffset)
     }
 

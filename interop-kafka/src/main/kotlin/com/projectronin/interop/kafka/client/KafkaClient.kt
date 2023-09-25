@@ -51,7 +51,6 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
         duration: Duration = Duration.ofMillis(1000),
         limit: Int = 100000
     ): List<RoninEvent<*>> {
-        val messageList = mutableListOf<RoninEvent<*>>()
         val consumer = consumersByTopicAndGroup.computeIfAbsent("${topic.topicName}|$groupId") {
             createConsumer(
                 topic,
@@ -61,6 +60,29 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
             )
         }
 
+        return consume(consumer, duration, limit)
+    }
+
+    fun retrieveMultiTopicEvents(
+        topicList: List<KafkaTopic>,
+        typeMap: Map<String, KClass<*>>,
+        groupId: String,
+        duration: Duration = Duration.ofMillis(1000),
+        limit: Int = 100000
+    ): List<RoninEvent<*>> {
+        val consumer = consumersByTopicAndGroup.computeIfAbsent("MultiTopicConsumer|$groupId") {
+            createMultiConsumer(
+                topicList,
+                typeMap,
+                kafkaConfig,
+                groupId
+            )
+        }
+        return consume(consumer, duration, limit)
+    }
+
+    private fun consume(consumer: RoninConsumer, duration: Duration, limit: Int): List<RoninEvent<*>> {
+        val messageList = mutableListOf<RoninEvent<*>>()
         // initial poll, will return immediately if events exist. Otherwise waits for [duration]
         consumer.pollOnce(duration) {
             messageList.add(it)

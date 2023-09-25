@@ -34,7 +34,7 @@ fun createProducerProperties(kafkaConfig: KafkaConfig): RoninProducerKafkaProper
 }
 
 /**
- * Creates a [RoninConsumer] capable of publishing to the [KafkaTopic] represented by [topic],
+ * Creates a [RoninConsumer] capable of consuming the [KafkaTopic] represented by [topic],
  * allows for consumer group to be overridden with [overriddenGroupId].
  */
 fun createConsumer(
@@ -57,6 +57,34 @@ fun createConsumer(
     )
     return RoninConsumer(
         topics = listOf(topic.topicName),
+        typeMap = typeMap,
+        kafkaProperties = consumerProperties
+    )
+}
+
+/**
+ * Creates a [RoninConsumer] capable of consuming the [KafkaTopic]s represented by [topics],
+ * allows for consumer group to be overridden with [overriddenGroupId].
+ */
+fun createMultiConsumer(
+    topics: List<KafkaTopic>,
+    typeMap: Map<String, KClass<*>>,
+    kafkaConfig: KafkaConfig,
+    overriddenGroupId: String? = null
+): RoninConsumer {
+    val kafkaProperties = kafkaConfig.properties
+    // allow consumers to initialize from the current offset rather than the very first
+    // used by mirth channels as we add to the DAG
+    val consumerProperties = RoninConsumerKafkaProperties(
+        "bootstrap.servers" to kafkaConfig.bootstrap.servers,
+        "security.protocol" to kafkaProperties.security.protocol,
+        "sasl.mechanism" to kafkaProperties.sasl.mechanism,
+        "sasl.jaas.config" to kafkaProperties.sasl.jaas.config,
+        "group.id" to (overriddenGroupId ?: kafkaConfig.retrieve.groupId),
+        "auto.offset.reset" to "latest"
+    )
+    return RoninConsumer(
+        topics = topics.map { it.topicName },
         typeMap = typeMap,
         kafkaProperties = consumerProperties
     )

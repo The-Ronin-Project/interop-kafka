@@ -346,6 +346,36 @@ class KafkaClientTest {
     }
 
     @Test
+    fun `retrieve multi events works`() {
+        val mockEvent = mockk<RoninEvent<InteropResourcePublishV1>>()
+        every { mockEvent.data } returns InteropResourcePublishV1(
+            "TENANT",
+            ResourceType.Patient,
+            InteropResourcePublishV1.DataTrigger.nightly,
+            resourceJson = "json",
+            metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now())
+        )
+        every { mockEvent.id } returns "messageID"
+        mockkStatic(::createMultiConsumer)
+        val mockConsumer = mockk<RoninConsumer>()
+        every { createMultiConsumer(any(), any(), any(), any()) } returns mockConsumer
+        every { mockConsumer.pollOnce(timeout = any(), handler = captureLambda()) } answers {
+            lambda<(RoninEvent<*>) -> RoninEventResult>().invoke(mockEvent)
+        }
+        every { mockConsumer.stop() } just Runs
+        every { mockConsumer.unsubscribe() } just Runs
+        val client = KafkaClient(kafkaConfig)
+        val ret = client.retrieveMultiTopicEvents(
+            topicList = listOf(mockk { every { topicName } returns "topicName" }),
+            typeMap = mapOf(),
+            groupId = "groupID",
+            limit = 1
+        )
+        assertEquals(ret.size, 1)
+        unmockkStatic(::createMultiConsumer)
+    }
+
+    @Test
     fun `retrieve events works with overridden group`() {
         val mockEvent = mockk<RoninEvent<InteropResourcePublishV1>>()
         every { mockEvent.data } returns InteropResourcePublishV1(
