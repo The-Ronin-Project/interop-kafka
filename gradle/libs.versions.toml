@@ -1,5 +1,5 @@
 [versions]
-interop-common = "3.12.0"
+interop-common = "3.12.2"
 interop-event-resource-internal = "1.1.0"
 interop-event-resource-request = "1.1.0"
 interop-fhir = "8.10.1"
@@ -9,7 +9,7 @@ mockk = "1.13.8"
 ronin-kafka = "1.1.1"
 # @pin until can move to JDK 17
 spring-boot = "2.7.13"
-testcontainers-bom = "1.19.0"
+testcontainers-bom = "1.19.1"
 
 [libraries]
 event-interop-resource-internal = { module = "com.projectronin.contract.event:event-interop-resource-internal", version.ref = "interop-event-resource-internal" }
