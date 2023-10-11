@@ -85,6 +85,23 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             }
         )
 
-        return listOf(nightlyTopic, adHocTopic)
+        val backfillTopic = PublishTopic(
+            systemName = system,
+            topicName = "oci.us-phoenix-1.interop-mirth.${resourceType.eventName()}-publish-adhoc.v1",
+            dataSchema = "https://github.com/projectronin/contract-event-interop-resource-publish/blob/main/v1/resource-publish-v1.schema.json",
+            resourceType = resourceType,
+            dataTrigger = DataTrigger.BACKFILL,
+            converter = { tenant, resource, metadata ->
+                InteropResourcePublishV1(
+                    tenantId = tenant,
+                    resourceJson = objectMapper.writeValueAsString(resource),
+                    resourceType = ResourceType.valueOf(resource.resourceType),
+                    dataTrigger = InteropResourcePublishV1.DataTrigger.backfill,
+                    metadata = metadata
+                )
+            }
+        )
+
+        return listOf(nightlyTopic, adHocTopic, backfillTopic)
     }
 }

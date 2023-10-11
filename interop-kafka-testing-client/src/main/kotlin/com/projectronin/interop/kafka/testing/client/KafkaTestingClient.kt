@@ -176,6 +176,7 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
         val relevantTopic = when (trigger) {
             DataTrigger.NIGHTLY -> topics.first { it.topicName.contains("nightly") }
             DataTrigger.AD_HOC -> topics.first { it.topicName.contains("adhoc") }
+            DataTrigger.BACKFILL -> topics.first { it.topicName.contains("backfill") }
         }
         runCatching {
             adminClient.createTopics(listOf(NewTopic(relevantTopic.topicName, 1, 1))).all().get()

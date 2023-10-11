@@ -60,6 +60,7 @@ class KafkaLoadService(private val kafkaClient: KafkaClient, topics: List<LoadTo
                         dataTrigger = when (trigger) {
                             DataTrigger.AD_HOC -> InteropResourceLoadV1.DataTrigger.adhoc
                             DataTrigger.NIGHTLY -> InteropResourceLoadV1.DataTrigger.nightly
+                            DataTrigger.BACKFILL -> InteropResourceLoadV1.DataTrigger.backfill
                         },
                         metadata = metadata,
                         flowOptions = flowOptions

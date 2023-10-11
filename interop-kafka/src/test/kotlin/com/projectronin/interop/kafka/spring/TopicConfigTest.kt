@@ -45,7 +45,7 @@ class TopicConfigTest {
         )
         val numberOfResources = supportedResources.size
         assertEquals(numberOfResources, LoadSpringConfig(mockProperties).loadTopics().size)
-        assertEquals(2 * numberOfResources, PublishSpringConfig(mockProperties).publishTopics().size)
+        assertEquals(3 * numberOfResources, PublishSpringConfig(mockProperties).publishTopics().size)
     }
 
     @Test

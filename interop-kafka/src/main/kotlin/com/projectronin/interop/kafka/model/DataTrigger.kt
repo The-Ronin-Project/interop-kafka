@@ -6,5 +6,7 @@ package com.projectronin.interop.kafka.model
 enum class DataTrigger(val type: String) {
     NIGHTLY("nightly"),
 
-    AD_HOC("adhoc")
+    AD_HOC("adhoc"),
+
+    BACKFILL("backfill")
 }
