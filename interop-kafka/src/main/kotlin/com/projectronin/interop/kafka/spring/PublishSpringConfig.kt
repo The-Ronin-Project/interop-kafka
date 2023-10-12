@@ -57,13 +57,20 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             dataSchema = "https://github.com/projectronin/contract-event-interop-resource-publish/blob/main/v1/resource-publish-v1.schema.json",
             resourceType = resourceType,
             dataTrigger = DataTrigger.NIGHTLY,
-            converter = { tenant, resource, metadata ->
+            converter = { tenant, resourceWrapper, metadata ->
+                val resource = resourceWrapper.resource
                 InteropResourcePublishV1(
                     tenantId = tenant,
                     resourceJson = objectMapper.writeValueAsString(resource),
                     resourceType = ResourceType.valueOf(resource.resourceType),
                     dataTrigger = InteropResourcePublishV1.DataTrigger.nightly,
-                    metadata = metadata
+                    metadata = metadata,
+                    embeddedResources = resourceWrapper.embeddedResources.map { embedded ->
+                        InteropResourcePublishV1.EmbeddedResource(
+                            resourceType = ResourceType.valueOf(embedded.resourceType),
+                            resourceJson = objectMapper.writeValueAsString(embedded)
+                        )
+                    }
                 )
             }
         )
@@ -74,13 +81,20 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             dataSchema = "https://github.com/projectronin/contract-event-interop-resource-publish/blob/main/v1/resource-publish-v1.schema.json",
             resourceType = resourceType,
             dataTrigger = DataTrigger.AD_HOC,
-            converter = { tenant, resource, metadata ->
+            converter = { tenant, resourceWrapper, metadata ->
+                val resource = resourceWrapper.resource
                 InteropResourcePublishV1(
                     tenantId = tenant,
                     resourceJson = objectMapper.writeValueAsString(resource),
                     resourceType = ResourceType.valueOf(resource.resourceType),
                     dataTrigger = InteropResourcePublishV1.DataTrigger.adhoc,
-                    metadata = metadata
+                    metadata = metadata,
+                    embeddedResources = resourceWrapper.embeddedResources.map { embedded ->
+                        InteropResourcePublishV1.EmbeddedResource(
+                            resourceType = ResourceType.valueOf(embedded.resourceType),
+                            resourceJson = objectMapper.writeValueAsString(embedded)
+                        )
+                    }
                 )
             }
         )

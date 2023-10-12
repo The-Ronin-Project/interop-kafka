@@ -5,14 +5,15 @@ import com.projectronin.event.interop.internal.v1.Metadata
 import com.projectronin.event.interop.internal.v1.ResourceType
 import com.projectronin.interop.fhir.r4.datatype.primitive.Id
 import com.projectronin.interop.fhir.r4.resource.Appointment
+import com.projectronin.interop.fhir.r4.resource.Organization
 import com.projectronin.interop.fhir.r4.resource.Patient
 import com.projectronin.interop.fhir.r4.resource.Practitioner
-import com.projectronin.interop.fhir.r4.resource.Resource
 import com.projectronin.interop.kafka.client.KafkaClient
 import com.projectronin.interop.kafka.model.DataTrigger
 import com.projectronin.interop.kafka.model.Failure
 import com.projectronin.interop.kafka.model.KafkaAction
 import com.projectronin.interop.kafka.model.KafkaEvent
+import com.projectronin.interop.kafka.model.PublishResourceWrapper
 import com.projectronin.interop.kafka.model.PublishTopic
 import com.projectronin.interop.kafka.model.PushResponse
 import io.mockk.every
@@ -25,7 +26,7 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
 class KafkaPublishServiceTest {
-    private val selfConverter = { _: String, resource: Resource<*>, _: Metadata -> resource }
+    private val selfConverter = { _: String, resourceWrapper: PublishResourceWrapper, _: Metadata -> resourceWrapper }
 
     private val patientTopic = mockk<PublishTopic> {
         every { resourceType } returns ResourceType.Patient
@@ -55,13 +56,18 @@ class KafkaPublishServiceTest {
         KafkaPublishService(kafkaClient, listOf(patientTopic, appointmentTopic, medicationRequestTopic))
 
     @Test
-    fun `publishing single resource is successful`() {
+    fun `publishResources handles successes and failures`() {
         val patient = mockk<Patient> {
             every { resourceType } returns "Patient"
             every { id } returns Id("1234")
         }
+        val appointment = mockk<Appointment> {
+            every { resourceType } returns "Appointment"
+            every { id } returns Id("5678")
+        }
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent =
+            KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", PublishResourceWrapper(patient))
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -69,9 +75,81 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent))
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient), metadata)
+        val appointmentEvent =
+            KafkaEvent(
+                "interop-platform",
+                "appointment",
+                KafkaAction.PUBLISH,
+                "5678",
+                PublishResourceWrapper(appointment)
+            )
+        every {
+            kafkaClient.publishEvents(
+                appointmentTopic,
+                listOf(appointmentEvent)
+            )
+        } throws IllegalStateException("exception")
+
+        val response =
+            service.publishResources(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf(patient, appointment),
+                metadata
+            )
         assertEquals(1, response.successful.size)
         assertEquals(patient, response.successful[0])
+
+        assertEquals(1, response.failures.size)
+        assertEquals(appointment, response.failures[0].data)
+        assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
+        assertEquals("exception", response.failures[0].error.message)
+    }
+
+    @Test
+    fun `publishing single resource is successful`() {
+        val patient = mockk<Patient> {
+            every { resourceType } returns "Patient"
+            every { id } returns Id("1234")
+        }
+        val patientWrapper = PublishResourceWrapper(patient)
+
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
+        every {
+            kafkaClient.publishEvents(
+                patientTopic,
+                listOf(patientEvent)
+            )
+        } returns PushResponse(successful = listOf(patientEvent))
+
+        val response = service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(patientWrapper), metadata)
+        assertEquals(1, response.successful.size)
+        assertEquals(patientWrapper, response.successful[0])
+
+        assertEquals(0, response.failures.size)
+    }
+
+    @Test
+    fun `publishing single resource with embedded resources is successful`() {
+        val patient = mockk<Patient> {
+            every { resourceType } returns "Patient"
+            every { id } returns Id("1234")
+        }
+        val organization = mockk<Organization>()
+        val practitioner = mockk<Practitioner>()
+        val patientWrapper = PublishResourceWrapper(patient, listOf(organization, practitioner))
+
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
+        every {
+            kafkaClient.publishEvents(
+                patientTopic,
+                listOf(patientEvent)
+            )
+        } returns PushResponse(successful = listOf(patientEvent))
+
+        val response = service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(patientWrapper), metadata)
+        assertEquals(1, response.successful.size)
+        assertEquals(patientWrapper, response.successful[0])
 
         assertEquals(0, response.failures.size)
     }
@@ -82,8 +160,9 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Patient"
             every { id } returns Id("1234")
         }
+        val patientWrapper = PublishResourceWrapper(patient)
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -91,11 +170,38 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(failures = listOf(Failure(patientEvent, IllegalStateException("exception"))))
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient), metadata)
+        val response = service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(patientWrapper), metadata)
         assertEquals(0, response.successful.size)
 
         assertEquals(1, response.failures.size)
-        assertEquals(patient, response.failures[0].data)
+        assertEquals(patientWrapper, response.failures[0].data)
+        assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
+        assertEquals("exception", response.failures[0].error.message)
+    }
+
+    @Test
+    fun `publishing single resource with embedded resources has failure`() {
+        val patient = mockk<Patient> {
+            every { resourceType } returns "Patient"
+            every { id } returns Id("1234")
+        }
+        val organization = mockk<Organization>()
+        val practitioner = mockk<Practitioner>()
+        val patientWrapper = PublishResourceWrapper(patient, listOf(organization, practitioner))
+
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
+        every {
+            kafkaClient.publishEvents(
+                patientTopic,
+                listOf(patientEvent)
+            )
+        } returns PushResponse(failures = listOf(Failure(patientEvent, IllegalStateException("exception"))))
+
+        val response = service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(patientWrapper), metadata)
+        assertEquals(0, response.successful.size)
+
+        assertEquals(1, response.failures.size)
+        assertEquals(patientWrapper, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals("exception", response.failures[0].error.message)
     }
@@ -106,8 +212,9 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Patient"
             every { id } returns Id("1234")
         }
+        val patientWrapper = PublishResourceWrapper(patient)
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -115,11 +222,11 @@ class KafkaPublishServiceTest {
             )
         } throws IllegalStateException("exception")
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient), metadata)
+        val response = service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(patientWrapper), metadata)
         assertEquals(0, response.successful.size)
 
         assertEquals(1, response.failures.size)
-        assertEquals(patient, response.failures[0].data)
+        assertEquals(patientWrapper, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals("exception", response.failures[0].error.message)
     }
@@ -134,9 +241,11 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Patient"
             every { id } returns Id("5678")
         }
+        val patientWrapper1 = PublishResourceWrapper(patient1)
+        val patientWrapper2 = PublishResourceWrapper(patient2)
 
-        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient1)
-        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "5678", patient2)
+        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper1)
+        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "5678", patientWrapper2)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -144,15 +253,21 @@ class KafkaPublishServiceTest {
             )
         } throws IllegalStateException("exception")
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient1, patient2), metadata)
+        val response =
+            service.publishResourceWrappers(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf(patientWrapper1, patientWrapper2),
+                metadata
+            )
         assertEquals(0, response.successful.size)
 
         assertEquals(2, response.failures.size)
-        assertEquals(patient1, response.failures[0].data)
+        assertEquals(patientWrapper1, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals("exception", response.failures[0].error.message)
 
-        assertEquals(patient2, response.failures[1].data)
+        assertEquals(patientWrapper2, response.failures[1].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[1].error)
         assertEquals("exception", response.failures[1].error.message)
     }
@@ -167,8 +282,10 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Appointment"
             every { id } returns Id("5678")
         }
+        val patientWrapper = PublishResourceWrapper(patient)
+        val appointmentWrapper = PublishResourceWrapper(appointment)
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -176,7 +293,8 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent))
 
-        val appointmentEvent = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointment)
+        val appointmentEvent =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointmentWrapper)
         every {
             kafkaClient.publishEvents(
                 appointmentTopic,
@@ -184,12 +302,18 @@ class KafkaPublishServiceTest {
             )
         } throws IllegalStateException("exception")
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient, appointment), metadata)
+        val response =
+            service.publishResourceWrappers(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf(patientWrapper, appointmentWrapper),
+                metadata
+            )
         assertEquals(1, response.successful.size)
-        assertEquals(patient, response.successful[0])
+        assertEquals(patientWrapper, response.successful[0])
 
         assertEquals(1, response.failures.size)
-        assertEquals(appointment, response.failures[0].data)
+        assertEquals(appointmentWrapper, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals("exception", response.failures[0].error.message)
     }
@@ -204,8 +328,10 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Appointment"
             every { id } returns Id("5678")
         }
+        val patientWrapper = PublishResourceWrapper(patient)
+        val appointmentWrapper = PublishResourceWrapper(appointment)
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -213,7 +339,8 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent))
 
-        val appointmentEvent = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointment)
+        val appointmentEvent =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointmentWrapper)
         every {
             kafkaClient.publishEvents(
                 appointmentTopic,
@@ -221,10 +348,16 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(appointmentEvent))
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient, appointment), metadata)
+        val response =
+            service.publishResourceWrappers(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf(patientWrapper, appointmentWrapper),
+                metadata
+            )
         assertEquals(2, response.successful.size)
-        assertTrue(response.successful.contains(patient))
-        assertTrue(response.successful.contains(appointment))
+        assertTrue(response.successful.contains(patientWrapper))
+        assertTrue(response.successful.contains(appointmentWrapper))
 
         assertEquals(0, response.failures.size)
     }
@@ -247,9 +380,13 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Appointment"
             every { id } returns Id("7890")
         }
+        val patientWrapper1 = PublishResourceWrapper(patient1)
+        val patientWrapper2 = PublishResourceWrapper(patient2)
+        val appointmentWrapper1 = PublishResourceWrapper(appointment1)
+        val appointmentWrapper2 = PublishResourceWrapper(appointment2)
 
-        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient1)
-        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "3456", patient2)
+        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper1)
+        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "3456", patientWrapper2)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -257,8 +394,10 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent1, patientEvent2))
 
-        val appointmentEvent1 = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointment1)
-        val appointmentEvent2 = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "7890", appointment2)
+        val appointmentEvent1 =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointmentWrapper1)
+        val appointmentEvent2 =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "7890", appointmentWrapper2)
         every {
             kafkaClient.publishEvents(
                 appointmentTopic,
@@ -266,17 +405,17 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(appointmentEvent1, appointmentEvent2))
 
-        val response = service.publishResources(
+        val response = service.publishResourceWrappers(
             tenantId,
             DataTrigger.NIGHTLY,
-            listOf(patient1, patient2, appointment1, appointment2),
+            listOf(patientWrapper1, patientWrapper2, appointmentWrapper1, appointmentWrapper2),
             metadata
         )
         assertEquals(4, response.successful.size)
-        assertTrue(response.successful.contains(patient1))
-        assertTrue(response.successful.contains(patient2))
-        assertTrue(response.successful.contains(appointment1))
-        assertTrue(response.successful.contains(appointment2))
+        assertTrue(response.successful.contains(patientWrapper1))
+        assertTrue(response.successful.contains(patientWrapper2))
+        assertTrue(response.successful.contains(appointmentWrapper1))
+        assertTrue(response.successful.contains(appointmentWrapper2))
 
         assertEquals(0, response.failures.size)
     }
@@ -308,9 +447,13 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Appointment"
             every { id } returns Id("7890")
         }
+        val patientWrapper1 = PublishResourceWrapper(patient1)
+        val patientWrapper2 = PublishResourceWrapper(patient2)
+        val appointmentWrapper1 = PublishResourceWrapper(appointment1)
+        val appointmentWrapper2 = PublishResourceWrapper(appointment2)
 
-        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient1)
-        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "3456", patient2)
+        val patientEvent1 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper1)
+        val patientEvent2 = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "3456", patientWrapper2)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -318,8 +461,10 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent1, patientEvent2))
 
-        val appointmentEvent1 = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointment1)
-        val appointmentEvent2 = KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "7890", appointment2)
+        val appointmentEvent1 =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "5678", appointmentWrapper1)
+        val appointmentEvent2 =
+            KafkaEvent("interop-platform", "appointment", KafkaAction.PUBLISH, "7890", appointmentWrapper2)
         every {
             kafkaClient.publishEvents(
                 appointmentTopicAdhoc,
@@ -327,15 +472,15 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(appointmentEvent1, appointmentEvent2))
 
-        val response = serviceMixed.publishResources(
+        val response = serviceMixed.publishResourceWrappers(
             tenantId,
             DataTrigger.NIGHTLY,
-            listOf(patient1, patient2, appointment1, appointment2),
+            listOf(patientWrapper1, patientWrapper2, appointmentWrapper1, appointmentWrapper2),
             metadata
         )
         assertEquals(2, response.successful.size)
-        assertTrue(response.successful.contains(patient1))
-        assertTrue(response.successful.contains(patient2))
+        assertTrue(response.successful.contains(patientWrapper1))
+        assertTrue(response.successful.contains(patientWrapper2))
 
         assertEquals(2, response.failures.size)
     }
@@ -346,12 +491,14 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Practitioner"
             every { id } returns Id("1234")
         }
+        val practitionerWrapper = PublishResourceWrapper(practitioner)
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(practitioner), metadata)
+        val response =
+            service.publishResourceWrappers(tenantId, DataTrigger.NIGHTLY, listOf(practitionerWrapper), metadata)
         assertEquals(0, response.successful.size)
 
         assertEquals(1, response.failures.size)
-        assertEquals(practitioner, response.failures[0].data)
+        assertEquals(practitionerWrapper, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals(
             "Zero or multiple PublishTopics associated to resource type Practitioner",
@@ -371,20 +518,27 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Practitioner"
             every { id } returns Id("5678")
         }
+        val practitionerWrapper1 = PublishResourceWrapper(practitioner1)
+        val practitionerWrapper2 = PublishResourceWrapper(practitioner2)
 
         val response =
-            service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(practitioner1, practitioner2), metadata)
+            service.publishResourceWrappers(
+                tenantId,
+                DataTrigger.NIGHTLY,
+                listOf(practitionerWrapper1, practitionerWrapper2),
+                metadata
+            )
         assertEquals(0, response.successful.size)
 
         assertEquals(2, response.failures.size)
-        assertEquals(practitioner1, response.failures[0].data)
+        assertEquals(practitionerWrapper1, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals(
             "Zero or multiple PublishTopics associated to resource type Practitioner",
             response.failures[0].error.message
         )
 
-        assertEquals(practitioner2, response.failures[1].data)
+        assertEquals(practitionerWrapper2, response.failures[1].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[1].error)
         assertEquals(
             "Zero or multiple PublishTopics associated to resource type Practitioner",
@@ -404,8 +558,10 @@ class KafkaPublishServiceTest {
             every { resourceType } returns "Practitioner"
             every { id } returns Id("1234")
         }
+        val patientWrapper = PublishResourceWrapper(patient)
+        val practitionerWrapper = PublishResourceWrapper(practitioner)
 
-        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patient)
+        val patientEvent = KafkaEvent("interop-platform", "patient", KafkaAction.PUBLISH, "1234", patientWrapper)
         every {
             kafkaClient.publishEvents(
                 patientTopic,
@@ -413,12 +569,17 @@ class KafkaPublishServiceTest {
             )
         } returns PushResponse(successful = listOf(patientEvent))
 
-        val response = service.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient, practitioner), metadata)
+        val response = service.publishResourceWrappers(
+            tenantId,
+            DataTrigger.NIGHTLY,
+            listOf(patientWrapper, practitionerWrapper),
+            metadata
+        )
         assertEquals(1, response.successful.size)
-        assertEquals(patient, response.successful[0])
+        assertEquals(patientWrapper, response.successful[0])
 
         assertEquals(1, response.failures.size)
-        assertEquals(practitioner, response.failures[0].data)
+        assertEquals(practitionerWrapper, response.failures[0].data)
         assertInstanceOf(IllegalStateException::class.java, response.failures[0].error)
         assertEquals(
             "Zero or multiple PublishTopics associated to resource type Practitioner",

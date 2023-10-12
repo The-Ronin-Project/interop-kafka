@@ -10,6 +10,7 @@ import com.projectronin.interop.kafka.model.DataTrigger
 import com.projectronin.interop.kafka.model.Failure
 import com.projectronin.interop.kafka.model.KafkaAction
 import com.projectronin.interop.kafka.model.KafkaEvent
+import com.projectronin.interop.kafka.model.PublishResourceWrapper
 import com.projectronin.interop.kafka.model.PublishTopic
 import com.projectronin.interop.kafka.model.PushResponse
 import mu.KotlinLogging
@@ -28,19 +29,37 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
     /**
      * Publishes the [resources] to the appropriate Kafka topics for [tenantId].
      */
+    @Deprecated(message = "Use publishResourceWrappers instead")
     fun publishResources(
         tenantId: String,
         trigger: DataTrigger,
         resources: List<Resource<*>>,
         metadata: Metadata
     ): PushResponse<Resource<*>> {
-        val resourcesByType = resources.groupBy { ResourceType.valueOf(it.resourceType) }
-        val results = resourcesByType.map { (type, resources) ->
+        val wrappers = resources.map { PublishResourceWrapper(it) }
+        val wrapperResponse = publishResourceWrappers(tenantId, trigger, wrappers, metadata)
+        return PushResponse(
+            successful = wrapperResponse.successful.map { it.resource },
+            failures = wrapperResponse.failures.map { Failure(it.data.resource, it.error) }
+        )
+    }
+
+    /**
+     * Publishes the [resourceWrappers] to the appropriate Kafka topics for [tenantId].
+     */
+    fun publishResourceWrappers(
+        tenantId: String,
+        trigger: DataTrigger,
+        resourceWrappers: List<PublishResourceWrapper>,
+        metadata: Metadata
+    ): PushResponse<PublishResourceWrapper> {
+        val resourcesByType = resourceWrappers.groupBy { ResourceType.valueOf(it.resourceType) }
+        val results = resourcesByType.map { (type, resourceWrappers) ->
             val publishTopic = getTopic(type, trigger)
             if (publishTopic == null) {
                 logger.error { "No matching PublishTopics associated to resource type $type and trigger $trigger" }
                 PushResponse(
-                    failures = resources.map {
+                    failures = resourceWrappers.map {
                         Failure(
                             it,
                             IllegalStateException("Zero or multiple PublishTopics associated to resource type $type")
@@ -48,7 +67,7 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
                     }
                 )
             } else {
-                val events = resources.associateBy {
+                val events = resourceWrappers.associateBy {
                     KafkaEvent(
                         domain = publishTopic.systemName,
                         resource = type.eventName(),
