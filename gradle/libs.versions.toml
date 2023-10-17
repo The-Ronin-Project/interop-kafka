@@ -1,6 +1,6 @@
 [versions]
-interop-common = "3.12.2"
-interop-event-resource-internal = "1.2.0"
+interop-common = "3.13.2"
+interop-event-resource-internal = "1.2.1"
 interop-event-resource-request = "1.1.0"
 interop-fhir = "8.10.2"
 interop-gradle = "3.2.0"
