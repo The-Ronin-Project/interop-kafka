@@ -1,9 +1,9 @@
 [versions]
 interop-common = "3.13.3"
-interop-event-resource-internal = "1.2.1"
+interop-event-resource-internal = "1.2.2"
 interop-event-resource-request = "1.1.0"
 interop-fhir = "8.10.3"
-interop-gradle = "3.2.0"
+interop-gradle = "3.3.0"
 kotlinx-coroutines = "1.7.3"
 mockk = "1.13.8"
 ronin-kafka = "1.1.1"
