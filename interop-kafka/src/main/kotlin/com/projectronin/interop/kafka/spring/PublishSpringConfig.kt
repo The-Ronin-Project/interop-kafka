@@ -105,13 +105,20 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             dataSchema = "https://github.com/projectronin/contract-event-interop-resource-publish/blob/main/v1/resource-publish-v1.schema.json",
             resourceType = resourceType,
             dataTrigger = DataTrigger.BACKFILL,
-            converter = { tenant, resource, metadata ->
+            converter = { tenant, resourceWrapper, metadata ->
+                val resource = resourceWrapper.resource
                 InteropResourcePublishV1(
                     tenantId = tenant,
                     resourceJson = objectMapper.writeValueAsString(resource),
                     resourceType = ResourceType.valueOf(resource.resourceType),
                     dataTrigger = InteropResourcePublishV1.DataTrigger.backfill,
-                    metadata = metadata
+                    metadata = metadata,
+                    embeddedResources = resourceWrapper.embeddedResources.map { embedded ->
+                        InteropResourcePublishV1.EmbeddedResource(
+                            resourceType = ResourceType.valueOf(embedded.resourceType),
+                            resourceJson = objectMapper.writeValueAsString(embedded)
+                        )
+                    }
                 )
             }
         )

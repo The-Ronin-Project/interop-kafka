@@ -131,4 +131,58 @@ class PublishSpringConfigTest {
         assertEquals(ResourceType.Organization, embeddedResources[1].resourceType)
         assertEquals("""{"resourceType":"Organization","id":"789"}""", embeddedResources[1].resourceJson)
     }
+
+    @Test
+    fun `backfill topic creates proper event for resource with  no embedded resources`() {
+        val backfillTopic = patientTopics.first { it.dataTrigger == DataTrigger.BACKFILL }
+
+        val patient = Patient(
+            id = Id("123")
+        )
+        val resourceWrapper = PublishResourceWrapper(patient)
+        val metadata = mockk<Metadata>()
+
+        val event = backfillTopic.converter.invoke("tenant", resourceWrapper, metadata) as InteropResourcePublishV1
+        assertEquals("tenant", event.tenantId)
+        assertEquals("""{"resourceType":"Patient","id":"123"}""", event.resourceJson)
+        assertEquals(ResourceType.Patient, event.resourceType)
+        assertEquals(InteropResourcePublishV1.DataTrigger.backfill, event.dataTrigger)
+        assertEquals(metadata, event.metadata)
+
+        val embeddedResources = event.embeddedResources ?: emptyList()
+        assertEquals(0, embeddedResources.size)
+    }
+
+    @Test
+    fun `backfill topic creates proper event for resource with embedded resources`() {
+        val backfillTopic = patientTopics.first { it.dataTrigger == DataTrigger.BACKFILL }
+
+        val patient = Patient(
+            id = Id("123")
+        )
+        val practitioner = Practitioner(
+            id = Id("456")
+        )
+        val organization = Organization(
+            id = Id("789")
+        )
+        val resourceWrapper = PublishResourceWrapper(patient, listOf(practitioner, organization))
+        val metadata = mockk<Metadata>()
+
+        val event = backfillTopic.converter.invoke("tenant", resourceWrapper, metadata) as InteropResourcePublishV1
+        assertEquals("tenant", event.tenantId)
+        assertEquals("""{"resourceType":"Patient","id":"123"}""", event.resourceJson)
+        assertEquals(ResourceType.Patient, event.resourceType)
+        assertEquals(InteropResourcePublishV1.DataTrigger.backfill, event.dataTrigger)
+        assertEquals(metadata, event.metadata)
+
+        val embeddedResources = event.embeddedResources ?: emptyList()
+        assertEquals(2, embeddedResources.size)
+
+        assertEquals(ResourceType.Practitioner, embeddedResources[0].resourceType)
+        assertEquals("""{"resourceType":"Practitioner","id":"456"}""", embeddedResources[0].resourceJson)
+
+        assertEquals(ResourceType.Organization, embeddedResources[1].resourceType)
+        assertEquals("""{"resourceType":"Organization","id":"789"}""", embeddedResources[1].resourceJson)
+    }
 }
