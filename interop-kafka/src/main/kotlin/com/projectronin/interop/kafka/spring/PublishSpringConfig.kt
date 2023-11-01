@@ -35,7 +35,8 @@ class PublishSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
             ResourceType.PractitionerRole,
             ResourceType.ServiceRequest,
             ResourceType.Procedure,
-            ResourceType.RequestGroup
+            ResourceType.RequestGroup,
+            ResourceType.DiagnosticReport
         )
         return supportedResources.map {
             generateTopics(it)
