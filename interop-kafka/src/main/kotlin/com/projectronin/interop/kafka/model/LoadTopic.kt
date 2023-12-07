@@ -9,7 +9,7 @@ data class LoadTopic(
     override val systemName: String,
     override val topicName: String,
     override val dataSchema: String,
-    val resourceType: ResourceType
+    val resourceType: ResourceType,
 ) : KafkaTopic {
     override val useLatestOffset = false
 }

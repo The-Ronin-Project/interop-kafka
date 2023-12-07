@@ -12,7 +12,7 @@ data class PublishTopic(
     override val dataSchema: String,
     val resourceType: ResourceType,
     val dataTrigger: DataTrigger,
-    val converter: (String, PublishResourceWrapper, Metadata) -> Any
+    val converter: (String, PublishResourceWrapper, Metadata) -> Any,
 ) : KafkaTopic {
     override val useLatestOffset = true
 }

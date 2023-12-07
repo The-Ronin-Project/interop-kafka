@@ -41,25 +41,28 @@ import java.util.UUID
  * fullConfig: if you need to use a 'real' config, like for testing in Dev/stage
  */
 class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null) {
-
     private val logger = KotlinLogging.logger { }
 
-    private val config = fullConfig ?: KafkaConfig(
-        cloud = KafkaCloudConfig(
-            vendor = "oci",
-            region = "us-phoenix-1"
-        ),
-        bootstrap = KafkaBootstrapConfig(kafkaHostPort),
-        publish = KafkaPublishConfig("interop-kafka-testing-client"),
-        retrieve = KafkaRetrieveConfig("interop-kafka-testing-client"),
-        properties = KafkaPropertiesConfig(
-            security = KafkaSecurityConfig(protocol = "PLAINTEXT"),
-            sasl = KafkaSaslConfig(
-                mechanism = "GSSAPI",
-                jaas = KafkaSaslJaasConfig("nothing")
-            )
+    private val config =
+        fullConfig ?: KafkaConfig(
+            cloud =
+                KafkaCloudConfig(
+                    vendor = "oci",
+                    region = "us-phoenix-1",
+                ),
+            bootstrap = KafkaBootstrapConfig(kafkaHostPort),
+            publish = KafkaPublishConfig("interop-kafka-testing-client"),
+            retrieve = KafkaRetrieveConfig("interop-kafka-testing-client"),
+            properties =
+                KafkaPropertiesConfig(
+                    security = KafkaSecurityConfig(protocol = "PLAINTEXT"),
+                    sasl =
+                        KafkaSaslConfig(
+                            mechanism = "GSSAPI",
+                            jaas = KafkaSaslJaasConfig("nothing"),
+                        ),
+                ),
         )
-    )
     val adminClient: AdminClient by lazy { KafkaAdminClient.create(createProducerProperties(config).properties) }
     val client = KafkaClient(config)
     val loadSpringConfig = LoadSpringConfig(config)
@@ -91,10 +94,11 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
                 val names = adminClient.listTopics().names().get()
                 if (names.any { it == topic }) {
                     val groups = adminClient.listConsumerGroups().valid().get()
-                    val unstableGroups = groups.filter {
-                        val state = it.state().get()
-                        state != ConsumerGroupState.EMPTY && state != ConsumerGroupState.STABLE
-                    }
+                    val unstableGroups =
+                        groups.filter {
+                            val state = it.state().get()
+                            state != ConsumerGroupState.EMPTY && state != ConsumerGroupState.STABLE
+                        }
                     if (unstableGroups.isEmpty()) {
                         logger.info { "Topic created and consumers are all stable" }
                         break
@@ -131,19 +135,19 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
     fun publishTopics(resourceType: ResourceType): List<KafkaTopic> =
         publishSpringConfig.publishTopics().filter { it.resourceType == resourceType }
 
-    fun loadTopic(resourceType: ResourceType): KafkaTopic =
-        loadSpringConfig.loadTopics().first { it.resourceType == resourceType }
+    fun loadTopic(resourceType: ResourceType): KafkaTopic = loadSpringConfig.loadTopics().first { it.resourceType == resourceType }
 
     fun pushLoadEvent(
         tenantId: String,
         trigger: DataTrigger,
         resourceFHIRIds: List<String>,
         resourceType: ResourceType,
-        metadata: Metadata = Metadata(
-            runId = UUID.randomUUID().toString(),
-            runDateTime = OffsetDateTime.now(ZoneOffset.UTC)
-        ),
-        flowOptions: InteropResourceLoadV1.FlowOptions? = null
+        metadata: Metadata =
+            Metadata(
+                runId = UUID.randomUUID().toString(),
+                runDateTime = OffsetDateTime.now(ZoneOffset.UTC),
+            ),
+        flowOptions: InteropResourceLoadV1.FlowOptions? = null,
     ) {
         val topic = loadTopic(resourceType)
         runCatching {
@@ -156,7 +160,7 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
             resourceFHIRIds = resourceFHIRIds,
             resourceType = resourceType,
             metadata = metadata,
-            flowOptions = flowOptions
+            flowOptions = flowOptions,
         )
     }
 
@@ -164,20 +168,23 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
         tenantId: String,
         trigger: DataTrigger,
         resources: List<Resource<*>>,
-        metadata: Metadata = Metadata(
-            runId = UUID.randomUUID().toString(),
-            runDateTime = OffsetDateTime.now(ZoneOffset.UTC)
-        )
+        metadata: Metadata =
+            Metadata(
+                runId = UUID.randomUUID().toString(),
+                runDateTime = OffsetDateTime.now(ZoneOffset.UTC),
+            ),
     ) {
-        val topics = publishSpringConfig.publishTopics().filter {
-            it.resourceType.name == resources.first().resourceType
-        }
+        val topics =
+            publishSpringConfig.publishTopics().filter {
+                it.resourceType.name == resources.first().resourceType
+            }
 
-        val relevantTopic = when (trigger) {
-            DataTrigger.NIGHTLY -> topics.first { it.topicName.contains("nightly") }
-            DataTrigger.AD_HOC -> topics.first { it.topicName.contains("adhoc") }
-            DataTrigger.BACKFILL -> topics.first { it.topicName.contains("backfill") }
-        }
+        val relevantTopic =
+            when (trigger) {
+                DataTrigger.NIGHTLY -> topics.first { it.topicName.contains("nightly") }
+                DataTrigger.AD_HOC -> topics.first { it.topicName.contains("adhoc") }
+                DataTrigger.BACKFILL -> topics.first { it.topicName.contains("backfill") }
+            }
         runCatching {
             adminClient.createTopics(listOf(NewTopic(relevantTopic.topicName, 1, 1))).all().get()
         }
@@ -186,7 +193,7 @@ class KafkaTestingClient(kafkaHostPort: String, fullConfig: KafkaConfig? = null)
             tenantId = tenantId,
             trigger = trigger,
             resources = resources,
-            metadata = metadata
+            metadata = metadata,
         )
     }
 

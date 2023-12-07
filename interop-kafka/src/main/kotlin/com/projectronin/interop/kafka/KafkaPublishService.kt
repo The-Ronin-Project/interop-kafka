@@ -34,13 +34,13 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
         tenantId: String,
         trigger: DataTrigger,
         resources: List<Resource<*>>,
-        metadata: Metadata
+        metadata: Metadata,
     ): PushResponse<Resource<*>> {
         val wrappers = resources.map { PublishResourceWrapper(it) }
         val wrapperResponse = publishResourceWrappers(tenantId, trigger, wrappers, metadata)
         return PushResponse(
             successful = wrapperResponse.successful.map { it.resource },
-            failures = wrapperResponse.failures.map { Failure(it.data.resource, it.error) }
+            failures = wrapperResponse.failures.map { Failure(it.data.resource, it.error) },
         )
     }
 
@@ -51,51 +51,54 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
         tenantId: String,
         trigger: DataTrigger,
         resourceWrappers: List<PublishResourceWrapper>,
-        metadata: Metadata
+        metadata: Metadata,
     ): PushResponse<PublishResourceWrapper> {
         val resourcesByType = resourceWrappers.groupBy { ResourceType.valueOf(it.resourceType) }
-        val results = resourcesByType.map { (type, resourceWrappers) ->
-            val publishTopic = getTopic(type, trigger)
-            if (publishTopic == null) {
-                logger.error { "No matching PublishTopics associated to resource type $type and trigger $trigger" }
-                PushResponse(
-                    failures = resourceWrappers.map {
-                        Failure(
-                            it,
-                            IllegalStateException("Zero or multiple PublishTopics associated to resource type $type")
-                        )
-                    }
-                )
-            } else {
-                val events = resourceWrappers.associateBy {
-                    KafkaEvent(
-                        domain = publishTopic.systemName,
-                        resource = type.eventName(),
-                        action = KafkaAction.PUBLISH,
-                        resourceId = it.id!!.value!!,
-                        data = publishTopic.converter(tenantId, it, metadata)
+        val results =
+            resourcesByType.map { (type, resourceWrappers) ->
+                val publishTopic = getTopic(type, trigger)
+                if (publishTopic == null) {
+                    logger.error { "No matching PublishTopics associated to resource type $type and trigger $trigger" }
+                    PushResponse(
+                        failures =
+                            resourceWrappers.map {
+                                Failure(
+                                    it,
+                                    IllegalStateException("Zero or multiple PublishTopics associated to resource type $type"),
+                                )
+                            },
+                    )
+                } else {
+                    val events =
+                        resourceWrappers.associateBy {
+                            KafkaEvent(
+                                domain = publishTopic.systemName,
+                                resource = type.eventName(),
+                                action = KafkaAction.PUBLISH,
+                                resourceId = it.id!!.value!!,
+                                data = publishTopic.converter(tenantId, it, metadata),
+                            )
+                        }
+
+                    runCatching { kafkaClient.publishEvents(publishTopic, events.keys.toList()) }.fold(
+                        onSuccess = { response ->
+                            PushResponse(
+                                successful = response.successful.map { events[it]!! },
+                                failures = response.failures.map { Failure(events[it.data]!!, it.error) },
+                            )
+                        },
+                        onFailure = { exception ->
+                            logger.error(exception) { "Exception while attempting to publish events to $publishTopic" }
+                            PushResponse(
+                                failures = events.map { Failure(it.value, exception) },
+                            )
+                        },
                     )
                 }
-
-                runCatching { kafkaClient.publishEvents(publishTopic, events.keys.toList()) }.fold(
-                    onSuccess = { response ->
-                        PushResponse(
-                            successful = response.successful.map { events[it]!! },
-                            failures = response.failures.map { Failure(events[it.data]!!, it.error) }
-                        )
-                    },
-                    onFailure = { exception ->
-                        logger.error(exception) { "Exception while attempting to publish events to $publishTopic" }
-                        PushResponse(
-                            failures = events.map { Failure(it.value, exception) }
-                        )
-                    }
-                )
             }
-        }
         return PushResponse(
             successful = results.flatMap { it.successful },
-            failures = results.flatMap { it.failures }
+            failures = results.flatMap { it.failures },
         )
     }
 
@@ -107,10 +110,11 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
         resourceType: ResourceType,
         dataTrigger: DataTrigger,
         groupId: String? = null,
-        justClear: Boolean = false
+        justClear: Boolean = false,
     ): List<InteropResourcePublishV1> {
-        val topic = getTopic(resourceType, dataTrigger)
-            ?: return emptyList()
+        val topic =
+            getTopic(resourceType, dataTrigger)
+                ?: return emptyList()
         val typeMap =
             mapOf("ronin.interop-mirth.${resourceType.eventName()}.publish" to InteropResourcePublishV1::class)
         if (justClear) {
@@ -119,21 +123,25 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
                 typeMap = typeMap,
                 groupId = groupId,
                 // shorter wait time because you are assuming events are there or not, no waiting
-                duration = Duration.ofMillis(500)
+                duration = Duration.ofMillis(500),
             )
             return emptyList()
         }
-        val events = kafkaClient.retrieveEvents(
-            topic = topic,
-            typeMap = typeMap,
-            groupId = groupId
-        )
+        val events =
+            kafkaClient.retrieveEvents(
+                topic = topic,
+                typeMap = typeMap,
+                groupId = groupId,
+            )
         return events.map {
             it.data as InteropResourcePublishV1
         }
     }
 
-    private fun getTopic(resourceType: ResourceType, dataTrigger: DataTrigger): PublishTopic? {
+    private fun getTopic(
+        resourceType: ResourceType,
+        dataTrigger: DataTrigger,
+    ): PublishTopic? {
         return publishTopicsByResourceType[Pair(resourceType, dataTrigger)]?.singleOrNull()
     }
 }

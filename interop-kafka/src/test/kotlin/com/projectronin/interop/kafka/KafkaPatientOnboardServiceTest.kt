@@ -14,11 +14,12 @@ internal class KafkaPatientOnboardServiceTest {
     fun `retrieve events happy path`() {
         val onboardStatus =
             PatientOnboardingStatus("12345", "tenant", PatientOnboardingStatus.OnboardAction.ONBOARD, "timestamp")
-        every { kafkaClient.retrieveEvents(any(), any(), any()) } returns listOf(
-            mockk {
-                every { data as PatientOnboardingStatus } returns onboardStatus
-            }
-        )
+        every { kafkaClient.retrieveEvents(any(), any(), any()) } returns
+            listOf(
+                mockk {
+                    every { data as PatientOnboardingStatus } returns onboardStatus
+                },
+            )
         val ret = service.retrieveOnboardEvents()
         assertEquals(ret.first().patientId, "12345")
     }

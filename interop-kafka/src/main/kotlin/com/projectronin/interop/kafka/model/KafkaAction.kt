@@ -9,5 +9,5 @@ enum class KafkaAction(val type: String) {
     LOAD("load"),
     CREATE("create"),
     UPDATE("update"),
-    REQUEST("request")
+    REQUEST("request"),
 }

@@ -10,44 +10,44 @@ data class KafkaConfig(
     val bootstrap: KafkaBootstrapConfig,
     val publish: KafkaPublishConfig,
     val retrieve: KafkaRetrieveConfig,
-    val properties: KafkaPropertiesConfig = KafkaPropertiesConfig()
+    val properties: KafkaPropertiesConfig = KafkaPropertiesConfig(),
 )
 
 data class KafkaCloudConfig(
     val vendor: String,
-    val region: String
+    val region: String,
 )
 
 data class KafkaBootstrapConfig(
-    val servers: String
+    val servers: String,
 )
 
 data class KafkaPublishConfig(
-    val source: String
+    val source: String,
 )
 
 data class KafkaRetrieveConfig(
     // default group ID
     val groupId: String,
-    val serviceId: String = "interop-mirth"
+    val serviceId: String = "interop-mirth",
 )
 
 data class KafkaPropertiesConfig(
     val security: KafkaSecurityConfig = KafkaSecurityConfig(),
-    val sasl: KafkaSaslConfig = KafkaSaslConfig()
+    val sasl: KafkaSaslConfig = KafkaSaslConfig(),
 )
 
 data class KafkaSecurityConfig(
-    val protocol: String? = null
+    val protocol: String? = null,
 )
 
 data class KafkaSaslConfig(
     val mechanism: String? = null,
     val username: String? = null,
     val password: String? = null,
-    val jaas: KafkaSaslJaasConfig = KafkaSaslJaasConfig()
+    val jaas: KafkaSaslJaasConfig = KafkaSaslJaasConfig(),
 )
 
 data class KafkaSaslJaasConfig(
-    val config: String? = null
+    val config: String? = null,
 )

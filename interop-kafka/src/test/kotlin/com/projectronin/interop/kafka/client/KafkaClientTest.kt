@@ -33,19 +33,23 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 class KafkaClientTest {
-    private val cloudConfig = KafkaCloudConfig(
-        vendor = "local",
-        region = "local"
-    )
+    private val cloudConfig =
+        KafkaCloudConfig(
+            vendor = "local",
+            region = "local",
+        )
 
-    private val kafkaConfig = mockk<KafkaConfig> {
-        every { cloud } returns cloudConfig
-    }
+    private val kafkaConfig =
+        mockk<KafkaConfig> {
+            every { cloud } returns cloudConfig
+        }
 
     private val tenantId = "test"
 
     private val producersProperty =
-        KafkaClient::class.memberProperties.find { it.name == "producersByTopicName" }!! as KProperty1<KafkaClient, MutableMap<String, RoninProducer>>
+        KafkaClient::class.memberProperties.find {
+            it.name == "producersByTopicName"
+        }!! as KProperty1<KafkaClient, MutableMap<String, RoninProducer>>
 
     @BeforeEach
     fun setup() {
@@ -62,21 +66,25 @@ class KafkaClientTest {
 
     @Test
     fun `creates new producer when none exist for topic`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
             }
-        }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+            }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -100,21 +108,25 @@ class KafkaClientTest {
 
     @Test
     fun `reuses producer when one exists for topic`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
             }
-        }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+            }
 
         val client = KafkaClient(kafkaConfig)
 
@@ -138,21 +150,25 @@ class KafkaClientTest {
 
     @Test
     fun `handles send that results in an exception`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } throws IllegalStateException("exception")
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
             }
-        }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } throws IllegalStateException("exception")
+                    }
+            }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -168,21 +184,25 @@ class KafkaClientTest {
 
     @Test
     fun `handles send that results in success`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
             }
-        }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+            }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -196,21 +216,25 @@ class KafkaClientTest {
 
     @Test
     fun `handles non-null trigger`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name-nightly"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name-nightly"
+                every { dataSchema } returns "test.topic.name.schema"
             }
-        }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+            }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -224,37 +248,45 @@ class KafkaClientTest {
 
     @Test
     fun `handles some results are failure`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-        val event2 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/2"
-            every { data } returns "Data 2"
-        }
-        val event3 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/3"
-            every { data } returns "Data 3"
-        }
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
+            }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+        val event2 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/2"
+                every { data } returns "Data 2"
+            }
+        val event3 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/3"
+                every { data } returns "Data 3"
+            }
 
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+                every { send("event.type", "event/2", "Data 2") } returns
+                    mockk {
+                        every { get() } throws IllegalStateException("exception")
+                    }
+                every { send("event.type", "event/3", "Data 3") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
             }
-            every { send("event.type", "event/2", "Data 2") } returns mockk {
-                every { get() } throws IllegalStateException("exception")
-            }
-            every { send("event.type", "event/3", "Data 3") } returns mockk {
-                every { get() } returns mockk()
-            }
-        }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -272,37 +304,45 @@ class KafkaClientTest {
 
     @Test
     fun `handles all results are success`() {
-        val topic = mockk<KafkaTopic> {
-            every { topicName } returns "test.topic.name"
-            every { dataSchema } returns "test.topic.name.schema"
-        }
-        val event1 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/1"
-            every { data } returns "Data 1"
-        }
-        val event2 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/2"
-            every { data } returns "Data 2"
-        }
-        val event3 = mockk<KafkaEvent<String>> {
-            every { type } returns "event.type"
-            every { subject } returns "event/3"
-            every { data } returns "Data 3"
-        }
+        val topic =
+            mockk<KafkaTopic> {
+                every { topicName } returns "test.topic.name"
+                every { dataSchema } returns "test.topic.name.schema"
+            }
+        val event1 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/1"
+                every { data } returns "Data 1"
+            }
+        val event2 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/2"
+                every { data } returns "Data 2"
+            }
+        val event3 =
+            mockk<KafkaEvent<String>> {
+                every { type } returns "event.type"
+                every { subject } returns "event/3"
+                every { data } returns "Data 3"
+            }
 
-        val producer = mockk<RoninProducer> {
-            every { send("event.type", "event/1", "Data 1") } returns mockk {
-                every { get() } returns mockk()
+        val producer =
+            mockk<RoninProducer> {
+                every { send("event.type", "event/1", "Data 1") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+                every { send("event.type", "event/2", "Data 2") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
+                every { send("event.type", "event/3", "Data 3") } returns
+                    mockk {
+                        every { get() } returns mockk()
+                    }
             }
-            every { send("event.type", "event/2", "Data 2") } returns mockk {
-                every { get() } returns mockk()
-            }
-            every { send("event.type", "event/3", "Data 3") } returns mockk {
-                every { get() } returns mockk()
-            }
-        }
 
         every { createProducer(topic, kafkaConfig) } returns producer
 
@@ -319,13 +359,14 @@ class KafkaClientTest {
     @Test
     fun `retrieve events works`() {
         val mockEvent = mockk<RoninEvent<InteropResourcePublishV1>>()
-        every { mockEvent.data } returns InteropResourcePublishV1(
-            "TENANT",
-            ResourceType.Patient,
-            InteropResourcePublishV1.DataTrigger.nightly,
-            resourceJson = "json",
-            metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now())
-        )
+        every { mockEvent.data } returns
+            InteropResourcePublishV1(
+                "TENANT",
+                ResourceType.Patient,
+                InteropResourcePublishV1.DataTrigger.nightly,
+                resourceJson = "json",
+                metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now()),
+            )
         every { mockEvent.id } returns "messageID"
         mockkStatic(::createConsumer)
         val mockConsumer = mockk<RoninConsumer>()
@@ -336,11 +377,12 @@ class KafkaClientTest {
         every { mockConsumer.stop() } just Runs
         every { mockConsumer.unsubscribe() } just Runs
         val client = KafkaClient(kafkaConfig)
-        val ret = client.retrieveEvents(
-            topic = mockk { every { topicName } returns "topicName" },
-            typeMap = mapOf(),
-            limit = 1
-        )
+        val ret =
+            client.retrieveEvents(
+                topic = mockk { every { topicName } returns "topicName" },
+                typeMap = mapOf(),
+                limit = 1,
+            )
         assertEquals(ret.size, 1)
         unmockkStatic(::createConsumer)
     }
@@ -348,13 +390,14 @@ class KafkaClientTest {
     @Test
     fun `retrieve multi events works`() {
         val mockEvent = mockk<RoninEvent<InteropResourcePublishV1>>()
-        every { mockEvent.data } returns InteropResourcePublishV1(
-            "TENANT",
-            ResourceType.Patient,
-            InteropResourcePublishV1.DataTrigger.nightly,
-            resourceJson = "json",
-            metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now())
-        )
+        every { mockEvent.data } returns
+            InteropResourcePublishV1(
+                "TENANT",
+                ResourceType.Patient,
+                InteropResourcePublishV1.DataTrigger.nightly,
+                resourceJson = "json",
+                metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now()),
+            )
         every { mockEvent.id } returns "messageID"
         mockkStatic(::createMultiConsumer)
         val mockConsumer = mockk<RoninConsumer>()
@@ -365,12 +408,13 @@ class KafkaClientTest {
         every { mockConsumer.stop() } just Runs
         every { mockConsumer.unsubscribe() } just Runs
         val client = KafkaClient(kafkaConfig)
-        val ret = client.retrieveMultiTopicEvents(
-            topicList = listOf(mockk { every { topicName } returns "topicName" }),
-            typeMap = mapOf(),
-            groupId = "groupID",
-            limit = 1
-        )
+        val ret =
+            client.retrieveMultiTopicEvents(
+                topicList = listOf(mockk { every { topicName } returns "topicName" }),
+                typeMap = mapOf(),
+                groupId = "groupID",
+                limit = 1,
+            )
         assertEquals(ret.size, 1)
         unmockkStatic(::createMultiConsumer)
     }
@@ -378,13 +422,14 @@ class KafkaClientTest {
     @Test
     fun `retrieve events works with overridden group`() {
         val mockEvent = mockk<RoninEvent<InteropResourcePublishV1>>()
-        every { mockEvent.data } returns InteropResourcePublishV1(
-            "TENANT",
-            ResourceType.Patient,
-            InteropResourcePublishV1.DataTrigger.nightly,
-            resourceJson = "json",
-            metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now())
-        )
+        every { mockEvent.data } returns
+            InteropResourcePublishV1(
+                "TENANT",
+                ResourceType.Patient,
+                InteropResourcePublishV1.DataTrigger.nightly,
+                resourceJson = "json",
+                metadata = Metadata(runId = "1234", runDateTime = OffsetDateTime.now()),
+            )
         every { mockEvent.id } returns "messageID"
         mockkStatic(::createConsumer)
         val mockConsumer = mockk<RoninConsumer>()
@@ -395,12 +440,13 @@ class KafkaClientTest {
         every { mockConsumer.stop() } just Runs
         every { mockConsumer.unsubscribe() } just Runs
         val client = KafkaClient(kafkaConfig)
-        val ret = client.retrieveEvents(
-            topic = mockk { every { topicName } returns "topicName" },
-            typeMap = mapOf(),
-            groupId = "override!",
-            limit = 1
-        )
+        val ret =
+            client.retrieveEvents(
+                topic = mockk { every { topicName } returns "topicName" },
+                typeMap = mapOf(),
+                groupId = "override!",
+                limit = 1,
+            )
         assertEquals(ret.size, 1)
         unmockkStatic(::createConsumer)
     }

@@ -8,7 +8,7 @@ data class KafkaEvent<T>(
     private val resource: String,
     private val action: KafkaAction,
     private val resourceId: String,
-    val data: T
+    val data: T,
 ) {
     private val base = "ronin.$domain.$resource"
     val type = "$base.${action.type}"

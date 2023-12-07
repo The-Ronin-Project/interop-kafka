@@ -8,5 +8,5 @@ enum class DataTrigger(val type: String) {
 
     AD_HOC("adhoc"),
 
-    BACKFILL("backfill")
+    BACKFILL("backfill"),
 }

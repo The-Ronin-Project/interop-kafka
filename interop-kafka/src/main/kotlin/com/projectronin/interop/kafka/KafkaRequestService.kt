@@ -20,43 +20,43 @@ class KafkaRequestService(private val kafkaClient: KafkaClient, private val topi
         resourceFHIRIds: List<String>,
         resourceType: ResourceType,
         requestingService: String,
-        flowOptions: InteropResourceRequestV1.FlowOptions? = null
+        flowOptions: InteropResourceRequestV1.FlowOptions? = null,
     ): PushResponse<String> {
-        val events = resourceFHIRIds.map {
-            KafkaEvent(
-                domain = topic.systemName,
-                resource = "resource",
-                action = KafkaAction.REQUEST,
-                resourceId = it,
-                data = InteropResourceRequestV1(
-                    tenantId = tenantId,
-                    resourceFHIRId = it,
-                    resourceType = resourceType.name,
-                    requestingService = requestingService,
-                    flowOptions = flowOptions
+        val events =
+            resourceFHIRIds.map {
+                KafkaEvent(
+                    domain = topic.systemName,
+                    resource = "resource",
+                    action = KafkaAction.REQUEST,
+                    resourceId = it,
+                    data =
+                        InteropResourceRequestV1(
+                            tenantId = tenantId,
+                            resourceFHIRId = it,
+                            resourceType = resourceType.name,
+                            requestingService = requestingService,
+                            flowOptions = flowOptions,
+                        ),
                 )
-            )
-        }
+            }
 
         return runCatching { kafkaClient.publishEvents(topic, events) }.fold(
             onSuccess = { response ->
                 PushResponse(
                     successful = response.successful.map { it.data.resourceFHIRId },
-                    failures = response.failures.map { Failure(it.data.data.resourceFHIRId, it.error) }
+                    failures = response.failures.map { Failure(it.data.data.resourceFHIRId, it.error) },
                 )
             },
             onFailure = { exception ->
                 logger.error(exception) { "Exception while attempting to publish events to $topic" }
                 PushResponse(
-                    failures = events.map { Failure(it.data.resourceFHIRId, exception) }
+                    failures = events.map { Failure(it.data.resourceFHIRId, exception) },
                 )
-            }
+            },
         )
     }
 
-    fun retrieveRequestEvents(
-        groupId: String? = null
-    ): List<InteropResourceRequestV1> {
+    fun retrieveRequestEvents(groupId: String? = null): List<InteropResourceRequestV1> {
         val typeMap = mapOf("ronin.interop-mirth.resource.request" to InteropResourceRequestV1::class)
         val events = kafkaClient.retrieveEvents(topic, typeMap, groupId)
         return events.map {

@@ -13,19 +13,21 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 
+@Suppress("ktlint:standard:max-line-length")
 class KafkaSpringConfigTest {
-    private val minimumConfigMap = mapOf(
-        "kafka.cloud.vendor" to "oci",
-        "kafka.cloud.region" to "us-phoenix-1",
-        "kafka.bootstrap.servers" to "localhost:9092",
-        "kafka.publish.source" to "interop-kafka-test",
-        "kafka.retrieve.groupId" to "interop-kafka-test",
-        "kafka.properties.sasl.jaas.config" to "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"\${kafka.sasl.username}\" password=\"\${kafka.sasl.password}\";",
-        "kafka.properties.sasl.mechanism" to "SCRAM-SHA-512",
-        "kafka.properties.sasl.username" to "saslUsername",
-        "kafka.properties.sasl.password" to "saslPassword",
-        "kafka.properties.security.protocol" to "SASL_SSL"
-    )
+    private val minimumConfigMap =
+        mapOf(
+            "kafka.cloud.vendor" to "oci",
+            "kafka.cloud.region" to "us-phoenix-1",
+            "kafka.bootstrap.servers" to "localhost:9092",
+            "kafka.publish.source" to "interop-kafka-test",
+            "kafka.retrieve.groupId" to "interop-kafka-test",
+            "kafka.properties.sasl.jaas.config" to "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"\${kafka.sasl.username}\" password=\"\${kafka.sasl.password}\";",
+            "kafka.properties.sasl.mechanism" to "SCRAM-SHA-512",
+            "kafka.properties.sasl.username" to "saslUsername",
+            "kafka.properties.sasl.password" to "saslPassword",
+            "kafka.properties.security.protocol" to "SASL_SSL",
+        )
 
     @Test
     fun `can build KafkaConfig with minimum required data`() {
@@ -33,34 +35,42 @@ class KafkaSpringConfigTest {
 
         assertEquals(
             KafkaConfig(
-                cloud = KafkaCloudConfig(
-                    vendor = "oci",
-                    region = "us-phoenix-1"
-                ),
-                bootstrap = KafkaBootstrapConfig(
-                    servers = "localhost:9092"
-                ),
-                publish = KafkaPublishConfig(
-                    source = "interop-kafka-test"
-                ),
-                retrieve = KafkaRetrieveConfig(
-                    groupId = "interop-kafka-test"
-                ),
-                properties = KafkaPropertiesConfig(
-                    security = KafkaSecurityConfig(
-                        protocol = "SASL_SSL"
+                cloud =
+                    KafkaCloudConfig(
+                        vendor = "oci",
+                        region = "us-phoenix-1",
                     ),
-                    sasl = KafkaSaslConfig(
-                        username = "saslUsername",
-                        password = "saslPassword",
-                        mechanism = "SCRAM-SHA-512",
-                        jaas = KafkaSaslJaasConfig(
-                            config = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"\${kafka.sasl.username}\" password=\"\${kafka.sasl.password}\";"
-                        )
-                    )
-                )
+                bootstrap =
+                    KafkaBootstrapConfig(
+                        servers = "localhost:9092",
+                    ),
+                publish =
+                    KafkaPublishConfig(
+                        source = "interop-kafka-test",
+                    ),
+                retrieve =
+                    KafkaRetrieveConfig(
+                        groupId = "interop-kafka-test",
+                    ),
+                properties =
+                    KafkaPropertiesConfig(
+                        security =
+                            KafkaSecurityConfig(
+                                protocol = "SASL_SSL",
+                            ),
+                        sasl =
+                            KafkaSaslConfig(
+                                username = "saslUsername",
+                                password = "saslPassword",
+                                mechanism = "SCRAM-SHA-512",
+                                jaas =
+                                    KafkaSaslJaasConfig(
+                                        config = "org.apache.kafka.common.security.scram.ScramLoginModule required username=\"\${kafka.sasl.username}\" password=\"\${kafka.sasl.password}\";",
+                                    ),
+                            ),
+                    ),
             ),
-            config
+            config,
         )
     }
 
@@ -91,9 +101,10 @@ class KafkaSpringConfigTest {
         }
 
         @Bean
-        fun commandLineRunner(ctx: ApplicationContext) = CommandLineRunner { args ->
-            context = ctx
-            received = kafkaConfig
-        }
+        fun commandLineRunner(ctx: ApplicationContext) =
+            CommandLineRunner { args ->
+                context = ctx
+                received = kafkaConfig
+            }
     }
 }

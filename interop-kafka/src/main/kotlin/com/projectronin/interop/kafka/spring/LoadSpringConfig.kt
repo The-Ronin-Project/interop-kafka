@@ -8,51 +8,52 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class LoadSpringConfig(private val kafkaSpringConfig: KafkaConfig) {
-
     @Bean
     fun loadTopics(): List<LoadTopic> {
-        val supportedResources = listOf(
-            ResourceType.Patient,
-            ResourceType.Binary,
-            ResourceType.Practitioner,
-            ResourceType.Appointment,
-            ResourceType.CarePlan,
-            ResourceType.CareTeam,
-            ResourceType.Communication,
-            ResourceType.Condition,
-            ResourceType.Encounter,
-            ResourceType.DocumentReference,
-            ResourceType.Location,
-            ResourceType.Medication,
-            ResourceType.MedicationAdministration,
-            ResourceType.MedicationRequest,
-            ResourceType.MedicationStatement,
-            ResourceType.Observation,
-            ResourceType.Organization,
-            ResourceType.PractitionerRole,
-            ResourceType.ServiceRequest,
-            ResourceType.Procedure,
-            ResourceType.RequestGroup,
-            ResourceType.DiagnosticReport
-        )
+        val supportedResources =
+            listOf(
+                ResourceType.Patient,
+                ResourceType.Binary,
+                ResourceType.Practitioner,
+                ResourceType.Appointment,
+                ResourceType.CarePlan,
+                ResourceType.CareTeam,
+                ResourceType.Communication,
+                ResourceType.Condition,
+                ResourceType.Encounter,
+                ResourceType.DocumentReference,
+                ResourceType.Location,
+                ResourceType.Medication,
+                ResourceType.MedicationAdministration,
+                ResourceType.MedicationRequest,
+                ResourceType.MedicationStatement,
+                ResourceType.Observation,
+                ResourceType.Organization,
+                ResourceType.PractitionerRole,
+                ResourceType.ServiceRequest,
+                ResourceType.Procedure,
+                ResourceType.RequestGroup,
+                ResourceType.DiagnosticReport,
+            )
         return supportedResources.map {
             generateTopics(it)
         }
     }
 
     fun generateTopics(resourceType: ResourceType): LoadTopic {
-        val topicParameters = listOf(
-            kafkaSpringConfig.cloud.vendor,
-            kafkaSpringConfig.cloud.region,
-            "interop-mirth",
-            "${resourceType.eventName()}-load",
-            "v1"
-        )
+        val topicParameters =
+            listOf(
+                kafkaSpringConfig.cloud.vendor,
+                kafkaSpringConfig.cloud.region,
+                "interop-mirth",
+                "${resourceType.eventName()}-load",
+                "v1",
+            )
         return LoadTopic(
             systemName = kafkaSpringConfig.retrieve.serviceId,
             topicName = topicParameters.joinToString("."),
             dataSchema = "https://github.com/projectronin/contract-event-interop-resource-load/blob/main/v1/resource-load-v1.schema.json",
-            resourceType = resourceType
+            resourceType = resourceType,
         )
     }
 }

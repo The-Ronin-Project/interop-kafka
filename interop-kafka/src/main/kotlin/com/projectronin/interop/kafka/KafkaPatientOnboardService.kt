@@ -9,19 +9,18 @@ import org.springframework.stereotype.Service
  */
 @Service
 class KafkaPatientOnboardService(private val kafkaClient: KafkaClient) {
-
-    private val onboardTopic = ExternalTopic(
-        systemName = "chokuto",
-        topicName = "oci.us-phoenix-1.chokuto.patient-onboarding-status-publish.v1",
-        dataSchema = "https://github.com/projectronin/contract-event-prodeng-patient-onboarding-status/blob/main/v1/patient-onboarding-status.schema.json"
-    )
+    @Suppress("ktlint:standard:max-line-length")
+    private val onboardTopic =
+        ExternalTopic(
+            systemName = "chokuto",
+            topicName = "oci.us-phoenix-1.chokuto.patient-onboarding-status-publish.v1",
+            dataSchema = "https://github.com/projectronin/contract-event-prodeng-patient-onboarding-status/blob/main/v1/patient-onboarding-status.schema.json",
+        )
 
     /**
      * Grabs onboarding-style events from Kafka.
      */
-    fun retrieveOnboardEvents(
-        groupId: String? = null
-    ): List<PatientOnboardingStatus> {
+    fun retrieveOnboardEvents(groupId: String? = null): List<PatientOnboardingStatus> {
         val typeMap = mapOf("ronin.patient.onboarding.create" to PatientOnboardingStatus::class)
         val events = kafkaClient.retrieveEvents(onboardTopic, typeMap, groupId)
         return events.map {
@@ -35,9 +34,10 @@ data class PatientOnboardingStatus(
     val patientId: String,
     val tenantId: String,
     val action: OnboardAction,
-    val actionTimestamp: String
+    val actionTimestamp: String,
 ) {
     enum class OnboardAction {
-        ONBOARD, OFFBOARD
+        ONBOARD,
+        OFFBOARD,
     }
 }

@@ -27,20 +27,21 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
      */
     fun <T> publishEvents(
         topic: KafkaTopic,
-        events: List<KafkaEvent<T>>
+        events: List<KafkaEvent<T>>,
     ): PushResponse<KafkaEvent<T>> {
         val producer = producersByTopicName.computeIfAbsent(topic.topicName) { createProducer(topic, kafkaConfig) }
 
-        val results = events.associateWith { event -> producer.send(event.type, event.subject, event.data) }
-            .map { (event, future) ->
-                runCatching { future.get() }.fold(
-                    onSuccess = { Pair(event, null) },
-                    onFailure = { Pair(null, Failure(event, it)) }
-                )
-            }
+        val results =
+            events.associateWith { event -> producer.send(event.type, event.subject, event.data) }
+                .map { (event, future) ->
+                    runCatching { future.get() }.fold(
+                        onSuccess = { Pair(event, null) },
+                        onFailure = { Pair(null, Failure(event, it)) },
+                    )
+                }
         return PushResponse(
             successful = results.mapNotNull { it.first },
-            failures = results.mapNotNull { it.second }
+            failures = results.mapNotNull { it.second },
         )
     }
 
@@ -49,16 +50,17 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
         typeMap: Map<String, KClass<*>>,
         groupId: String? = null,
         duration: Duration = Duration.ofMillis(1000),
-        limit: Int = 100000
+        limit: Int = 100000,
     ): List<RoninEvent<*>> {
-        val consumer = consumersByTopicAndGroup.computeIfAbsent("${topic.topicName}|$groupId") {
-            createConsumer(
-                topic,
-                typeMap,
-                kafkaConfig,
-                groupId
-            )
-        }
+        val consumer =
+            consumersByTopicAndGroup.computeIfAbsent("${topic.topicName}|$groupId") {
+                createConsumer(
+                    topic,
+                    typeMap,
+                    kafkaConfig,
+                    groupId,
+                )
+            }
 
         return consume(consumer, duration, limit)
     }
@@ -68,20 +70,25 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
         typeMap: Map<String, KClass<*>>,
         groupId: String,
         duration: Duration = Duration.ofMillis(1000),
-        limit: Int = 100000
+        limit: Int = 100000,
     ): List<RoninEvent<*>> {
-        val consumer = consumersByTopicAndGroup.computeIfAbsent("MultiTopicConsumer|$groupId") {
-            createMultiConsumer(
-                topicList,
-                typeMap,
-                kafkaConfig,
-                groupId
-            )
-        }
+        val consumer =
+            consumersByTopicAndGroup.computeIfAbsent("MultiTopicConsumer|$groupId") {
+                createMultiConsumer(
+                    topicList,
+                    typeMap,
+                    kafkaConfig,
+                    groupId,
+                )
+            }
         return consume(consumer, duration, limit)
     }
 
-    private fun consume(consumer: RoninConsumer, duration: Duration, limit: Int): List<RoninEvent<*>> {
+    private fun consume(
+        consumer: RoninConsumer,
+        duration: Duration,
+        limit: Int,
+    ): List<RoninEvent<*>> {
         val messageList = mutableListOf<RoninEvent<*>>()
         // initial poll, will return immediately if events exist. Otherwise waits for [duration]
         consumer.pollOnce(duration) {

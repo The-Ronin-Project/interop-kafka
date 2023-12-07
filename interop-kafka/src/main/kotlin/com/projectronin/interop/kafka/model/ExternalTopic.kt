@@ -6,7 +6,7 @@ package com.projectronin.interop.kafka.model
 data class ExternalTopic(
     override val systemName: String,
     override val topicName: String,
-    override val dataSchema: String
+    override val dataSchema: String,
 ) : KafkaTopic {
     override val useLatestOffset = false
 }

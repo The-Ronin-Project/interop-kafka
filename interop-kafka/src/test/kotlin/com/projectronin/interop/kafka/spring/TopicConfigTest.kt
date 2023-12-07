@@ -8,42 +8,46 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TopicConfigTest {
-    private val mockProperties = mockk<KafkaConfig> {
-        every { cloud } returns mockk {
-            every { region } returns "black-mesa-1"
-            every { vendor } returns "bmrf-cloud"
+    private val mockProperties =
+        mockk<KafkaConfig> {
+            every { cloud } returns
+                mockk {
+                    every { region } returns "black-mesa-1"
+                    every { vendor } returns "bmrf-cloud"
+                }
+            every { retrieve } returns
+                mockk {
+                    every { serviceId } returns "anti-mass-spec-service"
+                }
         }
-        every { retrieve } returns mockk {
-            every { serviceId } returns "anti-mass-spec-service"
-        }
-    }
 
     @Test
     fun `get topics`() {
-        val supportedResources = listOf(
-            "Patient",
-            "Binary",
-            "Practitioner",
-            "Appointment",
-            "CarePlan",
-            "CareTeam",
-            "Communication",
-            "Condition",
-            "DocumentReference",
-            "Encounter",
-            "Location",
-            "Medication",
-            "MedicationAdministration",
-            "MedicationRequest",
-            "MedicationStatement",
-            "Observation",
-            "Organization",
-            "PractitionerRole",
-            "ServiceRequest",
-            "Procedure",
-            "RequestGroup",
-            "DiagnosticReport"
-        )
+        val supportedResources =
+            listOf(
+                "Patient",
+                "Binary",
+                "Practitioner",
+                "Appointment",
+                "CarePlan",
+                "CareTeam",
+                "Communication",
+                "Condition",
+                "DocumentReference",
+                "Encounter",
+                "Location",
+                "Medication",
+                "MedicationAdministration",
+                "MedicationRequest",
+                "MedicationStatement",
+                "Observation",
+                "Organization",
+                "PractitionerRole",
+                "ServiceRequest",
+                "Procedure",
+                "RequestGroup",
+                "DiagnosticReport",
+            )
         val numberOfResources = supportedResources.size
         assertEquals(numberOfResources, LoadSpringConfig(mockProperties).loadTopics().size)
         assertEquals(3 * numberOfResources, PublishSpringConfig(mockProperties).publishTopics().size)

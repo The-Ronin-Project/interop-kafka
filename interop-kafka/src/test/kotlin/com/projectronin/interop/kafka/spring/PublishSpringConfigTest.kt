@@ -15,22 +15,25 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class PublishSpringConfigTest {
-    private val kafkaConfig = mockk<KafkaConfig> {
-        every { retrieve.serviceId } returns "serviceId"
-        every { cloud } returns mockk {
-            every { vendor } returns "vendor"
-            every { region } returns "region"
+    private val kafkaConfig =
+        mockk<KafkaConfig> {
+            every { retrieve.serviceId } returns "serviceId"
+            every { cloud } returns
+                mockk {
+                    every { vendor } returns "vendor"
+                    every { region } returns "region"
+                }
         }
-    }
     private val patientTopics = PublishSpringConfig(kafkaConfig).generateTopics(ResourceType.Patient)
 
     @Test
     fun `nightly topic creates proper event for resource with no embedded resources`() {
         val nightlyTopic = patientTopics.first { it.dataTrigger == DataTrigger.NIGHTLY }
 
-        val patient = Patient(
-            id = Id("123")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient)
         val metadata = mockk<Metadata>()
 
@@ -49,15 +52,18 @@ class PublishSpringConfigTest {
     fun `nightly topic creates proper event for resource with embedded resources`() {
         val nightlyTopic = patientTopics.first { it.dataTrigger == DataTrigger.NIGHTLY }
 
-        val patient = Patient(
-            id = Id("123")
-        )
-        val practitioner = Practitioner(
-            id = Id("456")
-        )
-        val organization = Organization(
-            id = Id("789")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
+        val practitioner =
+            Practitioner(
+                id = Id("456"),
+            )
+        val organization =
+            Organization(
+                id = Id("789"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient, listOf(practitioner, organization))
         val metadata = mockk<Metadata>()
 
@@ -82,9 +88,10 @@ class PublishSpringConfigTest {
     fun `adhoc topic creates proper event for resource with no embedded resources`() {
         val nightlyTopic = patientTopics.first { it.dataTrigger == DataTrigger.AD_HOC }
 
-        val patient = Patient(
-            id = Id("123")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient)
         val metadata = mockk<Metadata>()
 
@@ -103,15 +110,18 @@ class PublishSpringConfigTest {
     fun `adhoc topic creates proper event for resource with embedded resources`() {
         val nightlyTopic = patientTopics.first { it.dataTrigger == DataTrigger.AD_HOC }
 
-        val patient = Patient(
-            id = Id("123")
-        )
-        val practitioner = Practitioner(
-            id = Id("456")
-        )
-        val organization = Organization(
-            id = Id("789")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
+        val practitioner =
+            Practitioner(
+                id = Id("456"),
+            )
+        val organization =
+            Organization(
+                id = Id("789"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient, listOf(practitioner, organization))
         val metadata = mockk<Metadata>()
 
@@ -136,9 +146,10 @@ class PublishSpringConfigTest {
     fun `backfill topic creates proper event for resource with  no embedded resources`() {
         val backfillTopic = patientTopics.first { it.dataTrigger == DataTrigger.BACKFILL }
 
-        val patient = Patient(
-            id = Id("123")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient)
         val metadata = mockk<Metadata>()
 
@@ -157,15 +168,18 @@ class PublishSpringConfigTest {
     fun `backfill topic creates proper event for resource with embedded resources`() {
         val backfillTopic = patientTopics.first { it.dataTrigger == DataTrigger.BACKFILL }
 
-        val patient = Patient(
-            id = Id("123")
-        )
-        val practitioner = Practitioner(
-            id = Id("456")
-        )
-        val organization = Organization(
-            id = Id("789")
-        )
+        val patient =
+            Patient(
+                id = Id("123"),
+            )
+        val practitioner =
+            Practitioner(
+                id = Id("456"),
+            )
+        val organization =
+            Organization(
+                id = Id("789"),
+            )
         val resourceWrapper = PublishResourceWrapper(patient, listOf(practitioner, organization))
         val metadata = mockk<Metadata>()
 

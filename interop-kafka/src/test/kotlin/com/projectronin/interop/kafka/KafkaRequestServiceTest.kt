@@ -17,9 +17,10 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.OffsetDateTime
 
 class KafkaRequestServiceTest {
-    private val topic = mockk<RequestTopic> {
-        every { systemName } returns "interop-platform"
-    }
+    private val topic =
+        mockk<RequestTopic> {
+            every { systemName } returns "interop-platform"
+        }
 
     private val kafkaClient = mockk<KafkaClient>()
     private val tenantId = "test"
@@ -27,48 +28,18 @@ class KafkaRequestServiceTest {
 
     @Test
     fun `push single event success`() {
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "testing-service"
-        )
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "testing-service",
+            )
         val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
         every {
             kafkaClient.publishEvents(
                 topic,
-                listOf(event)
-            )
-        } returns PushResponse(successful = listOf(event))
-
-        assertDoesNotThrow {
-            service.pushRequestEvent(
-                tenantId,
-                listOf("1234"),
-                ResourceType.Patient,
-                "testing-service"
-            )
-        }
-    }
-
-    @Test
-    fun `push single event with flow options success`() {
-        val flowOptions = InteropResourceRequestV1.FlowOptions(
-            disableDownstreamResources = true,
-            normalizationRegistryMinimumTime = OffsetDateTime.now()
-        )
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "testing-service",
-            flowOptions = flowOptions
-        )
-        val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
-        every {
-            kafkaClient.publishEvents(
-                topic,
-                listOf(event)
+                listOf(event),
             )
         } returns PushResponse(successful = listOf(event))
 
@@ -78,24 +49,58 @@ class KafkaRequestServiceTest {
                 listOf("1234"),
                 ResourceType.Patient,
                 "testing-service",
-                flowOptions
+            )
+        }
+    }
+
+    @Test
+    fun `push single event with flow options success`() {
+        val flowOptions =
+            InteropResourceRequestV1.FlowOptions(
+                disableDownstreamResources = true,
+                normalizationRegistryMinimumTime = OffsetDateTime.now(),
+            )
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "testing-service",
+                flowOptions = flowOptions,
+            )
+        val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
+        every {
+            kafkaClient.publishEvents(
+                topic,
+                listOf(event),
+            )
+        } returns PushResponse(successful = listOf(event))
+
+        assertDoesNotThrow {
+            service.pushRequestEvent(
+                tenantId,
+                listOf("1234"),
+                ResourceType.Patient,
+                "testing-service",
+                flowOptions,
             )
         }
     }
 
     @Test
     fun `push single event failure`() {
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "testing-service"
-        )
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "testing-service",
+            )
         val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
         every {
             kafkaClient.publishEvents(
                 topic,
-                listOf(event)
+                listOf(event),
             )
         } returns PushResponse(failures = listOf(Failure((event), error = Exception())))
 
@@ -104,7 +109,7 @@ class KafkaRequestServiceTest {
                 tenantId,
                 listOf("1234"),
                 ResourceType.Patient,
-                "testing-service"
+                "testing-service",
             )
         }
 
@@ -113,26 +118,27 @@ class KafkaRequestServiceTest {
                 tenantId,
                 listOf("1234"),
                 ResourceType.Patient,
-                "testing-service"
+                "testing-service",
             )
                 .failures.size,
-            1
+            1,
         )
     }
 
     @Test
     fun `push single event exception`() {
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "testing-service"
-        )
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "testing-service",
+            )
         val event = KafkaEvent("interop-platform", "resource", KafkaAction.REQUEST, "1234", data = requestData)
         every {
             kafkaClient.publishEvents(
                 topic,
-                listOf(event)
+                listOf(event),
             )
         } throws Exception("error")
 
@@ -141,36 +147,40 @@ class KafkaRequestServiceTest {
                 tenantId,
                 listOf("1234"),
                 ResourceType.Patient,
-                "testing-service"
+                "testing-service",
             ).failures.size,
-            1
+            1,
         )
     }
 
     @Test
     fun `retrieve events works`() {
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "test-service"
-        )
-        val requestData2 = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "test-service",
-            flowOptions = InteropResourceRequestV1.FlowOptions(
-                disableDownstreamResources = true,
-                normalizationRegistryMinimumTime = OffsetDateTime.now()
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "test-service",
             )
-        )
+        val requestData2 =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "test-service",
+                flowOptions =
+                    InteropResourceRequestV1.FlowOptions(
+                        disableDownstreamResources = true,
+                        normalizationRegistryMinimumTime = OffsetDateTime.now(),
+                    ),
+            )
         every {
             kafkaClient.retrieveEvents(any(), any())
-        } returns listOf(
-            mockk { every { data } returns requestData },
-            mockk { every { data } returns requestData2 }
-        )
+        } returns
+            listOf(
+                mockk { every { data } returns requestData },
+                mockk { every { data } returns requestData2 },
+            )
         val ret = service.retrieveRequestEvents()
         assertEquals(2, ret.size)
         assertEquals(requestData, ret[0])
@@ -188,12 +198,13 @@ class KafkaRequestServiceTest {
 
     @Test
     fun `retrieve events works with new group ID`() {
-        val requestData = InteropResourceRequestV1(
-            tenantId = tenantId,
-            resourceFHIRId = "1234",
-            resourceType = "PATIENT",
-            requestingService = "test-service"
-        )
+        val requestData =
+            InteropResourceRequestV1(
+                tenantId = tenantId,
+                resourceFHIRId = "1234",
+                resourceType = "PATIENT",
+                requestingService = "test-service",
+            )
         every {
             kafkaClient.retrieveEvents(any(), any(), "override")
         } returns listOf(mockk { every { data } returns requestData })
