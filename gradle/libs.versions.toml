@@ -1,14 +1,13 @@
 [versions]
-interop-common = "3.13.4"
+interop-common = "4.0.0"
 interop-event-resource-internal = "1.2.3"
 interop-event-resource-request = "1.1.0"
-interop-fhir = "8.11.0"
-interop-gradle = "3.4.0"
+interop-fhir = "9.0.0"
+interop-gradle = "4.0.0"
 kotlinx-coroutines = "1.7.3"
 mockk = "1.13.8"
 ronin-kafka = "1.1.1"
-# @pin until can move to JDK 17
-spring-boot = "2.7.13"
+spring-boot = "3.2.0"
 testcontainers-bom = "1.19.3"
 
 [libraries]

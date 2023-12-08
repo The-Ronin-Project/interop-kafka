@@ -1,10 +1,8 @@
 package com.projectronin.interop.kafka.spring
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConfigurationProperties(prefix = "kafka")
-@ConstructorBinding
 data class KafkaConfig(
     val cloud: KafkaCloudConfig,
     val bootstrap: KafkaBootstrapConfig,
