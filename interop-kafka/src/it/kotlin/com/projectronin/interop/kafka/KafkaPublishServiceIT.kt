@@ -38,15 +38,16 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
             patientList.add(
                 Patient(
                     id = Id(patientList.size.toString()),
-                    name = listOf(
-                        HumanName(
-                            family = "Public".asFHIR(),
-                            given = listOf("John", "Q").asFHIR()
-                        )
-                    ),
+                    name =
+                        listOf(
+                            HumanName(
+                                family = "Public".asFHIR(),
+                                given = listOf("John", "Q").asFHIR(),
+                            ),
+                        ),
                     gender = AdministrativeGender.MALE.asCode(),
-                    birthDate = Date("1975-07-05")
-                )
+                    birthDate = Date("1975-07-05"),
+                ),
             )
         }
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
@@ -63,17 +64,19 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
 
     @Test
     fun `can publish a single resource`() {
-        val patient = Patient(
-            id = Id("12345"),
-            name = listOf(
-                HumanName(
-                    family = "Public".asFHIR(),
-                    given = listOf("John", "Q").asFHIR()
-                )
-            ),
-            gender = AdministrativeGender.MALE.asCode(),
-            birthDate = Date("1975-07-05")
-        )
+        val patient =
+            Patient(
+                id = Id("12345"),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Public".asFHIR(),
+                            given = listOf("John", "Q").asFHIR(),
+                        ),
+                    ),
+                gender = AdministrativeGender.MALE.asCode(),
+                birthDate = Date("1975-07-05"),
+            )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
 
         // because we start retrieving events from the latest we need to register the consumer,
@@ -95,17 +98,19 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
 
     @Test
     fun `can clear event`() {
-        val patient = Patient(
-            id = Id("12345"),
-            name = listOf(
-                HumanName(
-                    family = "Public".asFHIR(),
-                    given = listOf("John", "Q").asFHIR()
-                )
-            ),
-            gender = AdministrativeGender.MALE.asCode(),
-            birthDate = Date("1975-07-05")
-        )
+        val patient =
+            Patient(
+                id = Id("12345"),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Public".asFHIR(),
+                            given = listOf("John", "Q").asFHIR(),
+                        ),
+                    ),
+                gender = AdministrativeGender.MALE.asCode(),
+                birthDate = Date("1975-07-05"),
+            )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
         val response = publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient), metadata)
         assertEquals(1, response.successful.size)
@@ -119,28 +124,32 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
 
     @Test
     fun `can publish multiple resources of same type`() {
-        val patient1 = Patient(
-            id = Id("12345"),
-            name = listOf(
-                HumanName(
-                    family = "Public".asFHIR(),
-                    given = listOf("John", "Q").asFHIR()
-                )
-            ),
-            gender = AdministrativeGender.MALE.asCode(),
-            birthDate = Date("1975-07-05")
-        )
-        val patient2 = Patient(
-            id = Id("67890"),
-            name = listOf(
-                HumanName(
-                    family = "Doe".asFHIR(),
-                    given = listOf("Jane").asFHIR()
-                )
-            ),
-            gender = AdministrativeGender.FEMALE.asCode(),
-            birthDate = Date("1975-07-05")
-        )
+        val patient1 =
+            Patient(
+                id = Id("12345"),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Public".asFHIR(),
+                            given = listOf("John", "Q").asFHIR(),
+                        ),
+                    ),
+                gender = AdministrativeGender.MALE.asCode(),
+                birthDate = Date("1975-07-05"),
+            )
+        val patient2 =
+            Patient(
+                id = Id("67890"),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Doe".asFHIR(),
+                            given = listOf("Jane").asFHIR(),
+                        ),
+                    ),
+                gender = AdministrativeGender.FEMALE.asCode(),
+                birthDate = Date("1975-07-05"),
+            )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
         val response =
             publishService.publishResources(tenantId, DataTrigger.AD_HOC, listOf(patient1, patient2), metadata)
@@ -153,29 +162,34 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
 
     @Test
     fun `can publish multiple resources of differing type`() {
-        val patient1 = Patient(
-            id = Id("12345"),
-            name = listOf(
-                HumanName(
-                    family = "Public".asFHIR(),
-                    given = listOf("John", "Q").asFHIR()
-                )
-            ),
-            gender = AdministrativeGender.MALE.asCode(),
-            birthDate = Date("1975-07-05")
-        )
-        val appointment1 = Appointment(
-            id = Id("67890"),
-            participant = listOf(
-                Participant(
-                    actor = Reference(
-                        reference = "Patient/12345".asFHIR()
+        val patient1 =
+            Patient(
+                id = Id("12345"),
+                name =
+                    listOf(
+                        HumanName(
+                            family = "Public".asFHIR(),
+                            given = listOf("John", "Q").asFHIR(),
+                        ),
                     ),
-                    status = Code("accepted")
-                )
-            ),
-            status = Code("fulfilled")
-        )
+                gender = AdministrativeGender.MALE.asCode(),
+                birthDate = Date("1975-07-05"),
+            )
+        val appointment1 =
+            Appointment(
+                id = Id("67890"),
+                participant =
+                    listOf(
+                        Participant(
+                            actor =
+                                Reference(
+                                    reference = "Patient/12345".asFHIR(),
+                                ),
+                            status = Code("accepted"),
+                        ),
+                    ),
+                status = Code("fulfilled"),
+            )
         val metadata = Metadata(runId = UUID.randomUUID().toString(), runDateTime = OffsetDateTime.now())
         val response =
             publishService.publishResources(tenantId, DataTrigger.NIGHTLY, listOf(patient1, appointment1), metadata)

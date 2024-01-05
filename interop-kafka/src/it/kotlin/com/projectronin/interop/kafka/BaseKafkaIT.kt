@@ -19,29 +19,33 @@ abstract class BaseKafkaIT {
         val docker =
             DockerComposeContainer(File(BaseKafkaIT::class.java.getResource("/docker-compose-kafka.yaml")!!.file)).waitingFor(
                 "kafka",
-                Wait.forLogMessage(".*\\[KafkaServer id=\\d+\\] started.*", 1)
+                Wait.forLogMessage(".*\\[KafkaServer id=\\d+\\] started.*", 1),
             ).start()
     }
 
     private val logger = KotlinLogging.logger { }
 
     protected val tenantId = "test"
-    private val cloudConfig = KafkaCloudConfig(
-        vendor = "oci",
-        region = "us-phoenix-1"
-    )
+    private val cloudConfig =
+        KafkaCloudConfig(
+            vendor = "oci",
+            region = "us-phoenix-1",
+        )
 
-    protected val kafkaConfig = KafkaConfig(
-        cloud = cloudConfig,
-        bootstrap = KafkaBootstrapConfig(servers = "localhost:9092"),
-        publish = KafkaPublishConfig(source = "interop-kafka-it"),
-        properties = KafkaPropertiesConfig(
-            security = KafkaSecurityConfig(protocol = "PLAINTEXT"),
-            sasl = KafkaSaslConfig(
-                mechanism = "GSSAPI",
-                jaas = KafkaSaslJaasConfig(config = "")
-            )
-        ),
-        retrieve = KafkaRetrieveConfig("groupID")
-    )
+    protected val kafkaConfig =
+        KafkaConfig(
+            cloud = cloudConfig,
+            bootstrap = KafkaBootstrapConfig(servers = "localhost:9092"),
+            publish = KafkaPublishConfig(source = "interop-kafka-it"),
+            properties =
+                KafkaPropertiesConfig(
+                    security = KafkaSecurityConfig(protocol = "PLAINTEXT"),
+                    sasl =
+                        KafkaSaslConfig(
+                            mechanism = "GSSAPI",
+                            jaas = KafkaSaslJaasConfig(config = ""),
+                        ),
+                ),
+            retrieve = KafkaRetrieveConfig("groupID"),
+        )
 }
