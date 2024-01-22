@@ -7,7 +7,7 @@ interop-gradle = "4.0.2"
 kotlinx-coroutines = "1.7.3"
 mockk = "1.13.9"
 ronin-kafka = "1.1.2"
-spring-boot = "3.2.1"
+spring-boot = "3.2.2"
 testcontainers-bom = "1.19.3"
 
 [libraries]
