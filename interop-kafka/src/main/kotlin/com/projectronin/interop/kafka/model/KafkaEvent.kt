@@ -9,6 +9,9 @@ data class KafkaEvent<T>(
     private val action: KafkaAction,
     private val resourceId: String,
     val data: T,
+    val tenantId: String? = null,
+    val patientId: String? = null,
+    val resourceVersionId: Int? = null,
 ) {
     private val base = "ronin.$domain.$resource"
     val type = "$base.${action.type}"

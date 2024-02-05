@@ -32,13 +32,25 @@ class KafkaClient(private val kafkaConfig: KafkaConfig) {
         val producer = producersByTopicName.computeIfAbsent(topic.topicName) { createProducer(topic, kafkaConfig) }
 
         val results =
-            events.associateWith { event -> producer.send(event.type, event.subject, event.data) }
-                .map { (event, future) ->
-                    runCatching { future.get() }.fold(
-                        onSuccess = { Pair(event, null) },
-                        onFailure = { Pair(null, Failure(event, it)) },
+            events.associateWith { event ->
+                val roninEvent =
+                    RoninEvent(
+                        dataSchema = topic.dataSchema,
+                        source = kafkaConfig.publish.source,
+                        type = event.type,
+                        data = event.data,
+                        subject = event.subject,
+                        patientId = event.patientId,
+                        tenantId = event.tenantId,
+                        resourceVersion = event.resourceVersionId,
                     )
-                }
+                producer.send(roninEvent)
+            }.map { (event, future) ->
+                runCatching { future.get() }.fold(
+                    onSuccess = { Pair(event, null) },
+                    onFailure = { Pair(null, Failure(event, it)) },
+                )
+            }
         return PushResponse(
             successful = results.mapNotNull { it.first },
             failures = results.mapNotNull { it.second },
