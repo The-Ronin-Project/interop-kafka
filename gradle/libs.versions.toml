@@ -8,7 +8,7 @@ kotlinx-coroutines = "1.7.3"
 mockk = "1.13.9"
 ronin-kafka = "1.1.2"
 spring-boot = "3.2.2"
-testcontainers-bom = "1.19.4"
+testcontainers-bom = "1.19.5"
 
 [libraries]
 event-interop-resource-internal = { module = "com.projectronin.contract.event:event-interop-resource-internal", version.ref = "interop-event-resource-internal" }
