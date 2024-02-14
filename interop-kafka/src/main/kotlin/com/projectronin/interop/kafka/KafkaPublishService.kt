@@ -13,6 +13,7 @@ import com.projectronin.interop.kafka.model.KafkaEvent
 import com.projectronin.interop.kafka.model.PublishResourceWrapper
 import com.projectronin.interop.kafka.model.PublishTopic
 import com.projectronin.interop.kafka.model.PushResponse
+import datadog.trace.api.Trace
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -47,6 +48,7 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
     /**
      * Publishes the [resourceWrappers] to the appropriate Kafka topics for [tenantId].
      */
+    @Trace
     fun publishResourceWrappers(
         tenantId: String,
         trigger: DataTrigger,
@@ -106,6 +108,7 @@ class KafkaPublishService(private val kafkaClient: KafkaClient, topics: List<Pub
      * Grabs Publish-style events from Kafka.
      * If [justClear] is set, will simply drain the current events (useful for testing).
      */
+    @Trace
     fun retrievePublishEvents(
         resourceType: ResourceType,
         dataTrigger: DataTrigger,

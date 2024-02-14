@@ -8,6 +8,7 @@ import com.projectronin.interop.kafka.model.KafkaAction
 import com.projectronin.interop.kafka.model.KafkaEvent
 import com.projectronin.interop.kafka.model.PushResponse
 import com.projectronin.interop.kafka.model.RequestTopic
+import datadog.trace.api.Trace
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service
 class KafkaRequestService(private val kafkaClient: KafkaClient, private val topic: RequestTopic) {
     private val logger = KotlinLogging.logger { }
 
+    @Trace
     fun pushRequestEvent(
         tenantId: String,
         resourceFHIRIds: List<String>,
@@ -56,6 +58,7 @@ class KafkaRequestService(private val kafkaClient: KafkaClient, private val topi
         )
     }
 
+    @Trace
     fun retrieveRequestEvents(groupId: String? = null): List<InteropResourceRequestV1> {
         val typeMap = mapOf("ronin.interop-mirth.resource.request" to InteropResourceRequestV1::class)
         val events = kafkaClient.retrieveEvents(topic, typeMap, groupId)

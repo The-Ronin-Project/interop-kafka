@@ -9,6 +9,7 @@ dependencies {
     implementation(libs.interop.commonJackson)
     implementation(libs.ronin.kafka)
     implementation(libs.bundles.interop.kafka.events)
+    implementation(libs.dd.trace.api)
 
     implementation(platform(libs.spring.boot.parent))
     implementation("org.springframework.boot:spring-boot")

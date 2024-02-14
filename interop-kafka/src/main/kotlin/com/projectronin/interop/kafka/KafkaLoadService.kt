@@ -11,6 +11,7 @@ import com.projectronin.interop.kafka.model.KafkaAction
 import com.projectronin.interop.kafka.model.KafkaEvent
 import com.projectronin.interop.kafka.model.LoadTopic
 import com.projectronin.interop.kafka.model.PushResponse
+import datadog.trace.api.Trace
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -27,6 +28,7 @@ class KafkaLoadService(private val kafkaClient: KafkaClient, topics: List<LoadTo
     /**
      * Triggers a Load event for the [resourceFHIRIds] to the appropriate Kafka topics for [tenantId].
      */
+    @Trace
     fun pushLoadEvent(
         tenantId: String,
         trigger: DataTrigger,
@@ -93,6 +95,7 @@ class KafkaLoadService(private val kafkaClient: KafkaClient, topics: List<LoadTo
      * Grabs Load-style events from Kafka.
      * If [justClear] is set, will simply drain the current events (useful for testing).
      */
+    @Trace
     fun retrieveLoadEvents(
         resourceType: ResourceType,
         groupId: String? = null,
