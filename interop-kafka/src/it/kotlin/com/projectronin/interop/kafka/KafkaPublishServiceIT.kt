@@ -91,7 +91,11 @@ class KafkaPublishServiceIT : BaseKafkaIT() {
 
         assertEquals(0, response.failures.size)
 
-        val publishedEvents = publishService.retrievePublishEvents(ResourceType.Patient, DataTrigger.AD_HOC)
+        val publishedEvents =
+            (1..5).flatMap {
+                // This particular code can sometimes be finicky with timing out the consumer, so we're going to try a few times.
+                publishService.retrievePublishEvents(ResourceType.Patient, DataTrigger.AD_HOC)
+            }
         assertEquals(1, publishedEvents.size)
         assertEquals(JacksonUtil.writeJsonValue(patient), publishedEvents.first().resourceJson)
     }
